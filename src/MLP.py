@@ -30,30 +30,19 @@ class MLP:
     def feed_forward(self, inputs):
         # capa de entrada
         net = np.dot(self.W_inputs[:,:-1], inputs[:-1]) # Wx
-        for i in range(self.hidden_neurons):
-            net[i] += self.W_inputs[i,-1] # Wx + bias
-
-        # función de activación
-        output = [self.sigmoid(net[i]) for i in range(len(net))]
+        net = np.add(net, self.W_inputs[:,-1]) # Wx + bias
+        output = self.sigmoid(net) # función de activación
 
         # capas intermedias
         for i in range(self.hidden_layers):
             net = np.dot(self.W_hiddens[i,:,:-1], np.array(output)) # Wx
-
-            for j in range(self.hidden_neurons):
-                net[i] += self.W_hiddens[i,j,-1] # Wx + bias
-
-            # función de activación
-            output = [self.sigmoid(net[i]) for i in range(len(net))]
+            net = np.add(net, self.W_hiddens[i,:,-1]) # Wx + bias
+            output = self.sigmoid(net) # función de activación
 
         # capa de salida
         net = np.dot(self.W_outputs[:,:-1], output) # Wx
-
-        for i in range(self.output_neurons):
-            net[i] += self.W_outputs[i,-1] # Wx + b
-
-        # función de activación
-        output = [self.sigmoid(net[i]) for i in range(len(net))]
+        net = np.add(net, self.W_outputs[:,-1]) # Wx + b
+        output = self.sigmoid(net) # función de activación
         
         return np.array(output)
             
