@@ -8,7 +8,15 @@ if __name__ == "__main__":
     hidden_neurons = 4
     outputs = 2
 
-    mlp = MLP(inputs, hidden_layers, hidden_neurons, outputs)
-    result = mlp.feed_forward(np.array([1,2,3,1]))
+    input_data = np.array([1,2,3,1])
+    output_data = np.array([1,0])
 
-    print(result)
+
+    mlp = MLP(inputs, hidden_layers, hidden_neurons, outputs)
+    print("primera predicción: ", mlp.feed_forward(input_data))
+    mlp.print_weights()
+    for i in range(200):
+        mlp.train(input_data, output_data)
+    print(".-.-.-.-.-.-.-.-.-.-.-.-.-")
+    mlp.print_weights()
+    print("segunda predicción: ", mlp.feed_forward(input_data))
