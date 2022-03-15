@@ -47,24 +47,24 @@ class Plotter:
             self.plot_point((event.xdata, event.ydata), self.input_class.get())
             self.fig.canvas.draw() 
         
-        self.input_neurons = len(np.unique(self.Y))
-        if (self.input_neurons > 1):
+        self.outputs_class = len(np.unique(self.Y))
+        if (self.outputs_class > 1):
             self.weight_btn["state"] = NORMAL
 
     def mlp_can_randomize(self):
         if self.mlp == None:
             return False
 
-        return not self.mlp.input_neurons != self.input_neurons\
-               and self.mlp.hidden_layers != int(self.layers.get())\
-               and self.mlp.output_neurons != int(self.outputs.get())
+        return not (self.mlp.output_neurons != self.outputs_class
+               or self.mlp.hidden_layers != int(self.layers.get())-1
+               or self.mlp.hidden_neurons != int(self.neurons.get()))
 
     def init_weights(self):
         if not self.mlp_can_randomize():
-            self.mlp = MLP(self.input_neurons,
+            self.mlp = MLP(len(self.X[0]),
                            int(self.layers.get()),
                            int(self.neurons.get()), 
-                           int(self.outputs.get()))
+                           self.outputs_class)
 
         self.mlp.randomize_weights()
         self.mlp.print_weights()

@@ -24,7 +24,7 @@ def render_main_window(self):
     
     # Nos permitirá elegir la clase a dibujar en el plano
     Label(self.params_container, bg="white", text="Clase: ").grid(row=0, column=1, columnspan=2, sticky="e")
-    self.input_class = ttk.Combobox(self.params_container)
+    self.input_class = ttk.Combobox(self.params_container, state="readonly")
     self.input_class["values"] = list(range(0, 100))
     self.input_class.set(0)
 
@@ -52,19 +52,14 @@ def render_main_window(self):
 
     # arquitectura de la red
     Label(self.center_container, bg="white", text="Número de capas ocultas: ").grid(row=0, column=2, sticky="e")
-    self.layers = ttk.Combobox(self.center_container)
+    self.layers = ttk.Combobox(self.center_container, state="readonly")
     self.layers["values"] = [1, 2] # solo podemos tener una o dos capas ocultas
     self.layers.set(1) # usamos como valor inicial "1"
 
     Label(self.center_container, bg="white", text="Número de neuronas por capa: ").grid(row=1, column=2, sticky="e")
-    self.neurons = ttk.Combobox(self.center_container)
-    self.neurons["values"] = list(range(1, 100)) # podemos elegir cualquier número de neuronas
+    self.neurons = ttk.Combobox(self.center_container, state="readonly")
+    self.neurons["values"] = list(range(1, 15)) # podemos elegir cualquier número de neuronas
     self.neurons.set(1) # usamos como valor inicial "1"
-
-    Label(self.center_container, bg="white", text="Número de clases: ").grid(row=2, column=2, sticky="e")
-    self.outputs = ttk.Combobox(self.center_container)
-    self.outputs["values"] = list(range(1, 100))
-    self.outputs.set(1)
 
     self.right_container = Frame(self.params_container, bg="white", padx=10, pady=20)
     self.weight_btn = Button(self.right_container, bg="white",text="Inicializar pesos", command=self.init_weights, state=DISABLED)
@@ -79,7 +74,6 @@ def render_main_window(self):
     self.min_error.grid(row=2, column=1, sticky="w")
     self.layers.grid(row=0, column=3, sticky="w")
     self.neurons.grid(row=1, column=3, sticky="w")
-    self.outputs.grid(row=2, column=3, sticky="w")
     self.weight_btn.grid(row=0, column=0, sticky="we")
     self.run_btn.grid(row=1, column=0, sticky="we")
     self.input_class.grid(row=0, column=3, sticky="w")

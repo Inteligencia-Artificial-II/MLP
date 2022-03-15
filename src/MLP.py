@@ -34,22 +34,25 @@ class MLP:
         return 1 / (1 + np.exp(-y))
 
     def feed_forward(self, inputs):
+        inputs = np.insert(inputs, 0, -1)
+        print(inputs)
+        print(self.W_inputs)
         # capa de entrada
-        net = np.dot(self.W_inputs[:,:-1], inputs[:-1]) # Wx
-        net = np.add(net, self.W_inputs[:,-1]) # Wx + bias
+        net = np.dot(self.W_inputs, inputs) # Wx + bias
         output = self.sigmoid(net) # función de activación
+        output = np.insert(output, 0, -1)
         self.sigmoids[0] = output
+        print("sigmoids: ", output)
 
         # capas intermedias
         for i in range(self.hidden_layers):
-            net = np.dot(self.W_hiddens[i,:,:-1], np.array(output)) # Wx
-            net = np.add(net, self.W_hiddens[i,:,-1]) # Wx + bias
+            net = np.dot(self.W_hiddens[i,:,:], np.array(output)) # Wx + bias
             output = self.sigmoid(net) # función de activación
+            output = np.insert(output, 0, -1)
             self.sigmoids[i+1] = output
 
         # capa de salida
-        net = np.dot(self.W_outputs[:,:-1], output) # Wx
-        net = np.add(net, self.W_outputs[:,-1]) # Wx + b
+        net = np.dot(self.W_outputs, output) # Wx + bias
         output = self.sigmoid(net) # función de activación
         self.sigmoids[-1] = output
         
