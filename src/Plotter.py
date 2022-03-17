@@ -67,7 +67,6 @@ class Plotter:
                            self.outputs_class)
 
         self.mlp.randomize_weights()
-        self.mlp.print_weights()
         self.run_btn["state"] = NORMAL
 
     def plot_point(self, point: tuple, cluster=None):
@@ -114,6 +113,5 @@ class Plotter:
         self.min_error.set(0.1)
         self.layers.set(1)
         self.neurons.set(1)
-        self.outputs.set(1)
         self.reset_container.grid_remove()
         self.params_container.grid(row=2, column=0, columnspan=6, sticky="we")

@@ -58,7 +58,7 @@ def render_main_window(self):
 
     Label(self.center_container, bg="white", text="Número de neuronas por capa: ").grid(row=1, column=2, sticky="e")
     self.neurons = ttk.Combobox(self.center_container, state="readonly")
-    self.neurons["values"] = list(range(1, 15)) # podemos elegir cualquier número de neuronas
+    self.neurons["values"] = list(range(1, 10)) # podemos elegir cualquier número de neuronas
     self.neurons.set(1) # usamos como valor inicial "1"
 
     self.right_container = Frame(self.params_container, bg="white", padx=10, pady=20)
