@@ -43,10 +43,10 @@ class Plotter:
     def set_point(self, event):
         if event.xdata != None or event.ydata != None:
             self.X.append((event.xdata, event.ydata))
-            self.Y.append(self.input_class.get())
+            self.Y.append(int(self.input_class.get()))
             self.plot_point((event.xdata, event.ydata), self.input_class.get())
-            self.fig.canvas.draw() 
-        
+            self.fig.canvas.draw()
+
         self.outputs_class = len(np.unique(self.Y))
         if (self.outputs_class > 1):
             self.weight_btn["state"] = NORMAL
@@ -63,13 +63,13 @@ class Plotter:
         if not self.mlp_can_randomize():
             self.mlp = MLP(len(self.X[0]),
                            int(self.layers.get()),
-                           int(self.neurons.get()), 
+                           int(self.neurons.get()),
                            self.outputs_class)
 
         self.mlp.randomize_weights()
         self.mlp.print_weights()
+        self.run_btn["state"] = NORMAL
 
-    
     def plot_point(self, point: tuple, cluster=None):
         """Toma un array de tuplas y las añade los puntos en la figura con el
         color de su cluster"""
@@ -98,9 +98,9 @@ class Plotter:
 
     def run(self):
         """es ejecutada cuando el botón de «entrenar» es presionado"""
+        self.mlp.train(self.X, self.Y, int(self.max_epoch.get()), float(self.min_error.get()))
         self.params_container.grid_remove()
         self.reset_container.grid(row=2, column=0, columnspan=6, sticky="we")
-
 
     def evaluate(self):
         print("evaluando")

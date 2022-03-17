@@ -10,7 +10,7 @@ def render_error_plot(self):
 def render_confusion_matrix(self):
     """Definimos la ventana donde se imprime la gráfica de convergencia"""
     pass
-    
+
 def render_main_window(self):
     """Definimos la interfaz gráfica de usuario"""
     self.window.title('Multilayer Perceptron')
@@ -21,7 +21,7 @@ def render_main_window(self):
 
     # contendrá un segmento de la interfaz donde se establecerán los parametros de inicio
     self.params_container = Frame(self.window, bg="white", padx=20)
-    
+
     # Nos permitirá elegir la clase a dibujar en el plano
     Label(self.params_container, bg="white", text="Clase: ").grid(row=0, column=1, columnspan=2, sticky="e")
     self.input_class = ttk.Combobox(self.params_container, state="readonly")
