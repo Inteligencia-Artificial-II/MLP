@@ -58,7 +58,7 @@ class MLP:
             output = np.insert(output, 0, -1)
             net = np.dot(self.W_hiddens[i,:,:], np.array(output)) # Wx + bias
             output = self.sigmoid(net) # función de activación
-            self.sigmoids[i + 1] = output
+            self.sigmoids[i + 1] = output    
 
         # capa de salida
         output = np.insert(output, 0, -1)
@@ -89,23 +89,27 @@ class MLP:
         layer = -3
         # Sensibilidad para el restos de capas ocultas
         for i in reversed(range((self.hidden_layers))):
-            s = np.dot(np.dot(self.jacobian(self.sigmoids[layer]), self.W_hiddens[i, :, 1:].T).T, s)
+            s = np.dot(np.dot(self.jacobian(self.sigmoids[layer]), self.W_hiddens[i, :, 1:].T), s)
             self.sensitivities[layer] = s.copy()
             layer -= 1
 
-    def backpropagation(self):
+    def backpropagation(self, inputs):
         """Realiza el método de retropropagación"""
         # actualiza los pesos de la capa oculta final con la capa de salida
-        self.W_outputs += -self.lr * np.array(self.sensitivities[-1]) * self.W_outputs[0].T
+        a = np.insert(self.sigmoids[-2], 0, -1) # añade el bias al sigmoide
+        self.W_outputs += -self.lr * np.multiply(np.array(self.sensitivities[-1]), a.T)
 
         # actualiza los pesos de las capas ocultas
         layer = -2
         for i in reversed(range((self.hidden_layers))):
-            self.W_hiddens[i] += -self.lr * np.array(self.sensitivities[layer]) * self.W_hiddens[i,0].T
+            a = np.insert(self.sigmoids[layer-1], 0, -1) # añade el bias al sigmoide
+            self.W_hiddens[i] += -self.lr * np.multiply(np.array(self.sensitivities[layer]), a.T)
             layer -= 1
         
         # actualiza los pesos de la capa de entrada con la primer capa oculta
-        self.W_inputs += -self.lr * np.array(self.sensitivities[0]) * self.W_inputs[0].T
+        a = np.array(inputs)
+        a = np.insert(a, 0, -1)
+        self.W_inputs += -self.lr * np.multiply(np.array(self.sensitivities[0]), a.T)
 
 
     def encode_desired_output(self, Y: list):
@@ -130,18 +134,19 @@ class MLP:
         # Número de épocas
         epoch = 0
 
+
         while True:
             # Se itera por cada fila de X
             for i in range(m):
                 y = self.feed_forward(X[i])
-                error = D[i] - y
+                error = np.subtract(D[i], y)
                 epoch_sqr_error += np.sum(error ** 2)
 
                 # Se calculan las sensibilidades
                 self.get_sensitivity(error)
 
                 # Se ajustan los pesos
-                self.backpropagation()
+                self.backpropagation(X[i])
 
 
             # Se obtiene la media del error cuadrático y hacemos que el mse sea cero

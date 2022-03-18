@@ -118,6 +118,8 @@ class Plotter:
     def restart(self):
         """devuelve los valores y elementos gráficos a su estado inicial"""
         self.clear_plot()
+        self.is_training = not self.is_training
+        self.test_data.clear()
         self.input_class.set(0)
         self.learning_rate.set(0.1)
         self.max_epoch.set(self.default_epoch)
