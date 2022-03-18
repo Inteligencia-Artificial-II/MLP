@@ -93,20 +93,30 @@ class Plotter:
         for i in range(len(self.Y)):
             self.plot_point(self.X[i], self.Y[i])
 
-    def clear_plot(self, figure = 1):
+    def clear_plot(self, fig, fig_index = 1):
         """Borra los puntos del canvas"""
-        plt.figure(figure)
+        plt.figure(fig_index)
         plt.cla()
-        if figure == 1:
+        if fig_index == 1:
             self.ax.set_xlim([-5, 5])
             self.ax.set_ylim([-5, 5])
-        self.fig.canvas.draw()
+        fig.canvas.draw()
+
+    def plot_mse(self, x: list):
+        """Imprime la gráfica de convergencia del error cuadrático medio"""
+        plt.figure(2)
+        self.clear_plot(self.fig2, 2)
+        plt.plot(x)
+        self.fig2.canvas.draw()
+        self.fig2.canvas.flush_events()
+        plt.figure(1)
 
     def run(self):
         """es ejecutada cuando el botón de «entrenar» es presionado"""
         # entrenamos la red con los datos ingresados
         self.mlp.lr = float(self.learning_rate.get())
         self.mlp.error_figure = self.fig2
+        self.mlp.plot_mse = self.plot_mse
         self.mlp.train(self.X,
                 self.Y,
                 int(self.max_epoch.get()),
@@ -124,7 +134,9 @@ class Plotter:
 
     def restart(self):
         """devuelve los valores y elementos gráficos a su estado inicial"""
-        self.clear_plot()
+        self.clear_plot(self.fig2, 2)
+        plt.figure(1)
+        self.clear_plot(self.fig)
         self.is_training = not self.is_training
         self.test_data.clear()
         self.input_class.set(0)

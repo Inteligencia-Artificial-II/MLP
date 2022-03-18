@@ -23,6 +23,9 @@ class MLP:
         # guarda las sensibilidades = input layer + output layer + hidden layers
         self.sensitivities = list(range(h_layers + 1))
 
+        # Función del plotter para imprimir el mse
+        self.plot_mse = None
+
         # matrices de pesos
         # pesos de la entrada a la primer capa oculta
         self.W_inputs = np.empty((self.hidden_neurons, self.input_neurons + 1))
@@ -125,15 +128,6 @@ class MLP:
             D[i, Y[i]] = 1
         return D
 
-    def print_mse(self, x):
-        """Imprime la gráfica de convergencia del error cuadrático medio"""
-        plt.figure(2)
-        plt.cla()
-        plt.plot(x)
-        if self.error_figure != None:
-            self.error_figure.canvas.draw()
-        plt.figure(1)
-
     def train(self, X: list, Y: list, max_epoch: int, min_error: float):
         """Se entrena el mlp usando feed_forward y backpropagation"""
         # Se calcula la cantidad de filas m y la cantidad de columnas n de X
@@ -169,7 +163,8 @@ class MLP:
             epoch_sqr_error = 0
             epoch += 1
 
-            self.print_mse(mse_list)
+            if self.plot_mse != None:
+                self.plot_mse(mse_list)
 
             # Si se llegó al número máximo de épocas o si el mse es menor al error mínimo deseado
             if epoch == max_epoch or mean_sqr_error < min_error:
