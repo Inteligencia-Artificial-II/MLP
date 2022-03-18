@@ -42,10 +42,15 @@ class Plotter:
 
     def set_point(self, event):
         if event.xdata != None or event.ydata != None:
-            self.X.append((event.xdata, event.ydata))
-            self.Y.append(int(self.input_class.get()))
-            self.plot_point((event.xdata, event.ydata), self.input_class.get())
-            self.fig.canvas.draw()
+            if self.is_training:
+                self.X.append((event.xdata, event.ydata))
+                self.Y.append(int(self.input_class.get()))
+                self.plot_point((event.xdata, event.ydata), self.input_class.get())
+                self.fig.canvas.draw()
+            else:
+                self.test_data.append((event.xdata, event.ydata))
+                self.plot_point((event.xdata, event.ydata))
+                self.fig.canvas.draw()
 
         self.outputs_class = len(np.unique(self.Y))
         if (self.outputs_class > 1):
@@ -97,12 +102,18 @@ class Plotter:
 
     def run(self):
         """es ejecutada cuando el botón de «entrenar» es presionado"""
+        # entrenamos la red con los datos ingresados
         self.mlp.train(self.X, self.Y, int(self.max_epoch.get()), float(self.min_error.get()))
+        # establecemos el modo de evaluación
+        self.is_training = not self.is_training 
         self.params_container.grid_remove()
         self.reset_container.grid(row=2, column=0, columnspan=6, sticky="we")
 
     def evaluate(self):
         print("evaluando")
+        for i in self.test_data:
+            res = self.mlp.feed_forward(i)
+            print(res)
 
     def restart(self):
         """devuelve los valores y elementos gráficos a su estado inicial"""

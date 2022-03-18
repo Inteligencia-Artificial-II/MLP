@@ -17,7 +17,7 @@ class MLP:
         self.sigmoids = list(range(2 + self.hidden_layers))
 
         # guarda las sensibilidades = input layer + output layer + hidden layers
-        self.sensitivities = []
+        self.sensitivities = list(range(h_layers + 1))
 
         # matrices de pesos
         # pesos de la entrada a la primer capa oculta
@@ -80,32 +80,32 @@ class MLP:
         """Obtiene las sensibilidades de cada capa"""
         # Sensibilidad de la última capa
         s = np.array([-2 * np.dot(self.jacobian(self.sigmoids[-1]), error)]).T
-        self.sensitivities.append(s)
+        self.sensitivities[-1] = s.copy()
 
         # Sensibilidad de la última capa oculta (penúltima capa)
         s = np.dot(np.dot(self.jacobian(self.sigmoids[-2]), self.W_outputs[:,1:].T), s)
-        self.sensitivities.append(s)
+        self.sensitivities[-2] = s.copy()
 
         layer = -3
         # Sensibilidad para el restos de capas ocultas
         for i in reversed(range((self.hidden_layers))):
             s = np.dot(np.dot(self.jacobian(self.sigmoids[layer]), self.W_hiddens[i, :, 1:].T).T, s)
-            self.sensitivities.append(s)
+            self.sensitivities[layer] = s.copy()
             layer -= 1
 
     def backpropagation(self):
         """Realiza el método de retropropagación"""
         # actualiza los pesos de la capa oculta final con la capa de salida
-        self.W_outputs += -self.lr * np.array(self.sensitivities[0]) * self.W_outputs
+        self.W_outputs += -self.lr * np.array(self.sensitivities[-1]) * self.W_outputs[0].T
 
         # actualiza los pesos de las capas ocultas
-        layer = 1
+        layer = -2
         for i in reversed(range((self.hidden_layers))):
-            self.W_hiddens[i] += -self.lr * np.array(self.sensitivities[layer]) * self.W_hiddens[i]
-            layer += 1
+            self.W_hiddens[i] += -self.lr * np.array(self.sensitivities[layer]) * self.W_hiddens[i,0].T
+            layer -= 1
         
         # actualiza los pesos de la capa de entrada con la primer capa oculta
-        self.W_inputs += -self.lr * np.array(self.sensitivities[-1]) * self.W_inputs
+        self.W_inputs += -self.lr * np.array(self.sensitivities[0]) * self.W_inputs[0].T
 
 
     def encode_desired_output(self, Y: list):
@@ -142,6 +142,7 @@ class MLP:
 
                 # Se ajustan los pesos
                 self.backpropagation()
+
 
             # Se obtiene la media del error cuadrático y hacemos que el mse sea cero
             mean_sqr_error += epoch_sqr_error / m
