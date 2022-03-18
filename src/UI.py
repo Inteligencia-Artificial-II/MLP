@@ -17,7 +17,9 @@ def render_main_window(self):
 
     Label(self.window, text="MLP", bg="white", font=("Arial", 20)).grid(row=0, column=0, columnspan=6, sticky="we")
     # añade el gráfico de matplotlib a la interfaz de tkinter
-    FigureCanvasTkAgg(self.fig, self.window).get_tk_widget().grid(row=1, column=0, columnspan=6, sticky="we")
+    FigureCanvasTkAgg(self.fig, self.window).get_tk_widget().grid(row=1, column=0, columnspan=4, sticky="we")
+    # Añade la gráfica de convergencia del error cuadrático medio
+    FigureCanvasTkAgg(self.fig2, self.window).get_tk_widget().grid(row=1, column=4, columnspan=4, sticky="we")
 
     # contendrá un segmento de la interfaz donde se establecerán los parametros de inicio
     self.params_container = Frame(self.window, bg="white", padx=20)

@@ -11,7 +11,9 @@ class Plotter:
         self.ax_max = 5
         self.ax_min = -5
         self.fig = plt.figure(1)
+        self.fig2 = plt.figure(2)
         self.ax = self.fig.add_subplot(111)
+        self.ax2 = self.fig2.add_subplot(111)
         # establecemos los limites de la gráfica
         self.ax.set_xlim([self.ax_min, self.ax_max])
         self.ax.set_ylim([self.ax_min, self.ax_max])
@@ -53,7 +55,7 @@ class Plotter:
                 self.fig.canvas.draw()
 
         self.outputs_class = len(np.unique(self.Y))
-        if (self.outputs_class > 1):
+        if (self.outputs_class > 2):
             self.weight_btn["state"] = NORMAL
 
     def mlp_can_randomize(self):
@@ -104,6 +106,7 @@ class Plotter:
         """es ejecutada cuando el botón de «entrenar» es presionado"""
         # entrenamos la red con los datos ingresados
         self.mlp.lr = float(self.learning_rate.get())
+        self.mlp.error_figure = self.fig2
         self.mlp.train(self.X,
                 self.Y,
                 int(self.max_epoch.get()),

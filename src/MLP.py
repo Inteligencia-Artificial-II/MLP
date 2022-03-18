@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class MLP:
     def __init__(self, i_neurons, h_layers, h_neurons, o_neurons):
@@ -12,6 +13,9 @@ class MLP:
 
         # tasa de aprendizaje
         self.lr = 0.1
+
+        # Función para imprimir el error cuadrático medio
+        self.error_figure = None
 
         # guarda los valores de activación de todas las capas
         self.sigmoids = list(range(2 + self.hidden_layers))
@@ -121,6 +125,15 @@ class MLP:
             D[i, Y[i]] = 1
         return D
 
+    def print_mse(self, x):
+        """Imprime la gráfica de convergencia del error cuadrático medio"""
+        plt.figure(2)
+        plt.cla()
+        plt.plot(x)
+        if self.error_figure != None:
+            self.error_figure.canvas.draw()
+        plt.figure(1)
+
     def train(self, X: list, Y: list, max_epoch: int, min_error: float):
         """Se entrena el mlp usando feed_forward y backpropagation"""
         # Se calcula la cantidad de filas m y la cantidad de columnas n de X
@@ -130,6 +143,8 @@ class MLP:
 
         # Error cuadrático medio (mse)
         mean_sqr_error = 0
+        # Lista de errores cuadráticos medios
+        mse_list = []
         # Error cuadrático acumulado por época
         epoch_sqr_error = 0
         # Número de épocas
@@ -148,12 +163,14 @@ class MLP:
                 # Se ajustan los pesos
                 self.backpropagation(X[i])
 
-
             # Se obtiene la media del error cuadrático y hacemos que el mse sea cero
-            mean_sqr_error += epoch_sqr_error / m
+            mean_sqr_error = epoch_sqr_error / m
+            mse_list.append(mean_sqr_error)
             epoch_sqr_error = 0
-
             epoch += 1
+
+            self.print_mse(mse_list)
+
             # Si se llegó al número máximo de épocas o si el mse es menor al error mínimo deseado
             if epoch == max_epoch or mean_sqr_error < min_error:
                 break
