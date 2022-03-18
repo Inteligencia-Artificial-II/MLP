@@ -35,7 +35,7 @@ def render_main_window(self):
     Label(self.left_container, bg="white", text="Tasa de aprendizaje: ").grid(row=0, column=0, sticky="e")
     self.learning_rate = ttk.Combobox(self.left_container)
     self.learning_rate["values"] = list(np.arange(0.1, 1, 0.1).round(2))
-    self.learning_rate.set(0.1)
+    self.learning_rate.set(self.default_lr)
 
     Label(self.left_container, bg="white", text="Epocas máximas: ").grid(row=1, column=0, sticky="e")
     self.max_epoch= ttk.Combobox(self.left_container)
@@ -45,7 +45,7 @@ def render_main_window(self):
     Label(self.left_container, bg="white", text="Error mínimo deseado: ").grid(row=2, column=0, sticky="e")
     self.min_error = ttk.Combobox(self.left_container)
     self.min_error["values"] = list(np.arange(0, 1, 0.01).round(3))
-    self.min_error.set(0.1)
+    self.min_error.set(self.default_min_error)
 
     # contendrá la columna derecha de parámetros
     self.center_container = Frame(self.params_container, bg="white", padx=10, pady=20)
@@ -54,12 +54,12 @@ def render_main_window(self):
     Label(self.center_container, bg="white", text="Número de capas ocultas: ").grid(row=0, column=2, sticky="e")
     self.layers = ttk.Combobox(self.center_container, state="readonly")
     self.layers["values"] = [1, 2] # solo podemos tener una o dos capas ocultas
-    self.layers.set(1) # usamos como valor inicial "1"
+    self.layers.set(self.default_layers) # usamos como valor inicial "1"
 
     Label(self.center_container, bg="white", text="Número de neuronas por capa: ").grid(row=1, column=2, sticky="e")
     self.neurons = ttk.Combobox(self.center_container, state="readonly")
     self.neurons["values"] = list(range(1, 10)) # podemos elegir cualquier número de neuronas
-    self.neurons.set(1) # usamos como valor inicial "1"
+    self.neurons.set(self.default_neurons) # usamos como valor inicial "1"
 
     self.right_container = Frame(self.params_container, bg="white", padx=10, pady=20)
     self.weight_btn = Button(self.right_container, bg="white",text="Inicializar pesos", command=self.init_weights, state=DISABLED)

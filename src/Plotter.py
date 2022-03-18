@@ -27,13 +27,13 @@ class Plotter:
         # bandera para evaluar datos despues del entrenamiento
         self.is_training = True
 
-        # Parámetros para el algoritmo
-        self.epochs = 0 # epocas o generaciones máximas
-        self.lr = 0.0 # tasa de aprendizaje
-
         # Error acumulado
         self.acum_error = []
-        self.default_epoch = 25
+        self.default_epoch = 250
+        self.default_min_error = 0.1
+        self.default_lr = 0.3
+        self.default_layers = 1
+        self.default_neurons = 4
 
         # inicializamos la ventana principal
         self.window = Tk()
@@ -103,9 +103,13 @@ class Plotter:
     def run(self):
         """es ejecutada cuando el botón de «entrenar» es presionado"""
         # entrenamos la red con los datos ingresados
-        self.mlp.train(self.X, self.Y, int(self.max_epoch.get()), float(self.min_error.get()))
+        self.mlp.lr = float(self.learning_rate.get())
+        self.mlp.train(self.X,
+                self.Y,
+                int(self.max_epoch.get()),
+                float(self.min_error.get()))
         # establecemos el modo de evaluación
-        self.is_training = not self.is_training 
+        self.is_training = not self.is_training
         self.params_container.grid_remove()
         self.reset_container.grid(row=2, column=0, columnspan=6, sticky="we")
 
@@ -121,10 +125,10 @@ class Plotter:
         self.is_training = not self.is_training
         self.test_data.clear()
         self.input_class.set(0)
-        self.learning_rate.set(0.1)
+        self.learning_rate.set(self.default_lr)
         self.max_epoch.set(self.default_epoch)
-        self.min_error.set(0.1)
-        self.layers.set(1)
-        self.neurons.set(1)
+        self.min_error.set(self.default_min_error)
+        self.layers.set(self.default_layers)
+        self.neurons.set(self.default_neurons)
         self.reset_container.grid_remove()
         self.params_container.grid(row=2, column=0, columnspan=6, sticky="we")

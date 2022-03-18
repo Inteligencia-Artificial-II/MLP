@@ -58,7 +58,7 @@ class MLP:
             output = np.insert(output, 0, -1)
             net = np.dot(self.W_hiddens[i,:,:], np.array(output)) # Wx + bias
             output = self.sigmoid(net) # función de activación
-            self.sigmoids[i + 1] = output    
+            self.sigmoids[i + 1] = output
 
         # capa de salida
         output = np.insert(output, 0, -1)
@@ -105,7 +105,7 @@ class MLP:
             a = np.insert(self.sigmoids[layer-1], 0, -1) # añade el bias al sigmoide
             self.W_hiddens[i] += -self.lr * np.multiply(np.array(self.sensitivities[layer]), a.T)
             layer -= 1
-        
+
         # actualiza los pesos de la capa de entrada con la primer capa oculta
         a = np.array(inputs)
         a = np.insert(a, 0, -1)
@@ -117,6 +117,7 @@ class MLP:
         del vector de valores deseados Y"""
         D = np.zeros((len(Y), len(np.unique(Y))))
         for i in range(len(Y)):
+            # TODO: Cambiar esto para que se puedan poner clases no consecutivas
             D[i, Y[i]] = 1
         return D
 
@@ -133,7 +134,6 @@ class MLP:
         epoch_sqr_error = 0
         # Número de épocas
         epoch = 0
-
 
         while True:
             # Se itera por cada fila de X
