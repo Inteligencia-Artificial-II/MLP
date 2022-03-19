@@ -3,23 +3,19 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from sys import exit
 import numpy as np
 
-def render_error_plot(self):
-    """Definimos la ventana donde se imprime la gráfica de convergencia"""
-    pass
-
-def render_confusion_matrix(self):
-    """Definimos la ventana donde se imprime la gráfica de convergencia"""
-    pass
-
 def render_main_window(self):
     """Definimos la interfaz gráfica de usuario"""
     self.window.title('Multilayer Perceptron')
 
-    Label(self.window, text="MLP", bg="white", font=("Arial", 20)).grid(row=0, column=0, columnspan=6, sticky="we")
+    # Titulo de la ventana
+    Label(self.window, text="MLP", bg="white", font=("Arial", 20)).grid(row=0, column=0, columnspan=8, sticky="we")
+    # Añade los titulos de las gráficas
+    Label(self.window, text="Hiperplano", bg="white", font=("Arial", 14)).grid(row=1, column=0, columnspan=4, sticky="we")
+    Label(self.window, text="Gráfica de convergencia", bg="white", font=("Arial", 14)).grid(row=1, column=4, columnspan=4, sticky="we")
     # añade el gráfico de matplotlib a la interfaz de tkinter
-    FigureCanvasTkAgg(self.fig, self.window).get_tk_widget().grid(row=1, column=0, columnspan=4, sticky="we")
+    FigureCanvasTkAgg(self.fig, self.window).get_tk_widget().grid(row=2, column=0, columnspan=4, sticky="we")
     # Añade la gráfica de convergencia del error cuadrático medio
-    FigureCanvasTkAgg(self.fig2, self.window).get_tk_widget().grid(row=1, column=4, columnspan=4, sticky="we")
+    FigureCanvasTkAgg(self.fig2, self.window).get_tk_widget().grid(row=2, column=4, columnspan=4, sticky="we")
 
     # contendrá un segmento de la interfaz donde se establecerán los parametros de inicio
     self.params_container = Frame(self.window, bg="white", padx=20)
@@ -67,7 +63,7 @@ def render_main_window(self):
     self.weight_btn = Button(self.right_container, bg="white",text="Inicializar pesos", command=self.init_weights, state=DISABLED)
     self.run_btn = Button(self.right_container, text="Entrenar", command=self.run, state=DISABLED)
 
-    self.params_container.grid(row=2, column=0, columnspan=6, sticky="we")
+    self.params_container.grid(row=3, column=0, columnspan=8, sticky="we")
     self.left_container.grid(row=1, column=0, columnspan=2, sticky="we")
     self.center_container.grid(row=1, column=3, columnspan=2, sticky="we")
     self.right_container.grid(row=1, column=5, sticky="nswe")

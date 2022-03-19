@@ -127,6 +127,33 @@ class MLP:
             # TODO: Cambiar esto para que se puedan poner clases no consecutivas
             D[i, Y[i]] = 1
         return D
+    
+    def get_confusion_matrix(self, X: list, Y: list, D:list):
+        """Se genera la matriz de confusion"""
+        # numero de clases
+        n = len(np.unique(Y))
+        # matriz de confusion
+        conf_matrix = np.zeros((n+1, n+1))
+
+        # por cada elemento del set de datos de entrenamiento obtenemos su clasificación
+        count = 0
+        for i in X:
+            evaluate = self.feed_forward(i)
+            guessed = np.where(evaluate == max(evaluate))[0][0]
+            actual = np.where(D[count] == max(D[count]))[0][0]
+            conf_matrix[guessed][actual] += 1
+            count += 1
+
+        column_sum = conf_matrix.sum(axis=0)
+        row_sum = conf_matrix.sum(axis=1)
+
+        for i in range(n):
+            conf_matrix[i][n] = row_sum[i]
+            conf_matrix[n][i] = column_sum[i]
+        
+        conf_matrix[n][n] = column_sum.sum()
+
+        print("Matrix: ", conf_matrix)
 
     def train(self, X: list, Y: list, max_epoch: int, min_error: float):
         """Se entrena el mlp usando feed_forward y backpropagation"""
@@ -169,6 +196,8 @@ class MLP:
             # Si se llegó al número máximo de épocas o si el mse es menor al error mínimo deseado
             if epoch == max_epoch or mean_sqr_error < min_error:
                 break
+        
+        self.get_confusion_matrix(X, y, D)
 
     def print_weights(self):
         print("inputs: ", self.W_inputs)

@@ -124,7 +124,7 @@ class Plotter:
         # establecemos el modo de evaluación
         self.is_training = not self.is_training
         self.params_container.grid_remove()
-        self.reset_container.grid(row=2, column=0, columnspan=6, sticky="we")
+        self.reset_container.grid(row=3, column=0, columnspan=8, sticky="we")
 
     def evaluate(self):
         print("evaluando")
@@ -146,4 +146,4 @@ class Plotter:
         self.layers.set(self.default_layers)
         self.neurons.set(self.default_neurons)
         self.reset_container.grid_remove()
-        self.params_container.grid(row=2, column=0, columnspan=6, sticky="we")
+        self.params_container.grid(row=3, column=0, columnspan=8, sticky="we")
