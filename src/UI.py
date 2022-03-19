@@ -1,19 +1,12 @@
-from tkinter import Tk, Frame, Label, Entry, Button, DISABLED, Toplevel, ttk, CENTER, NO
+from tkinter import Frame, Label, Button, DISABLED, ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from sys import exit
 import numpy as np
 
-def render_error_plot(self):
-    """Definimos la ventana donde se imprime la gráfica de convergencia"""
-    pass
-
-def render_confusion_matrix(self):
-    """Definimos la ventana donde se imprime la gráfica de convergencia"""
-    pass
-
 def render_main_window(self):
     """Definimos la interfaz gráfica de usuario"""
     self.window.title('Multilayer Perceptron')
+    self.window.configure(bg='white')
 
     Label(self.window, text="MLP", bg="white", font=("Arial", 20)).grid(row=0, column=0, columnspan=8, sticky="we")
     # añade el gráfico de matplotlib a la interfaz de tkinter
@@ -91,7 +84,7 @@ def render_main_window(self):
     self.reset_container = Frame(self.window, bg="white", padx=20, pady=15)
     self.evaluate_btn = Button(self.reset_container, text="Evaluar", command=self.evaluate).grid(row=1, column=0, padx=15)
     self.reset_btn = Button(self.reset_container, text="Reiniciar", command=self.restart).grid(row=1, column=1, padx=15)
-    self.reset_container.grid(row=6, column=0, columnspan=8, sticky="we")
+    self.reset_container.grid(row=6, column=0, columnspan=8)
 
     self.reset_container.grid_remove()
     # escucha los eventos del mouse sobre el gráfico

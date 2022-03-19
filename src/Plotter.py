@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
-from matplotlib.backend_bases import MouseButton
 from matplotlib.cm import get_cmap
-from tkinter import NORMAL, DISABLED, messagebox, Tk
+from tkinter import NORMAL, DISABLED, Tk
 from src.UI import render_main_window
 from src.MLP import MLP
 import numpy as np

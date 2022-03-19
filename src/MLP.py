@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 class MLP:
     def __init__(self, i_neurons, h_layers, h_neurons, o_neurons):
@@ -173,6 +172,7 @@ class MLP:
 
 
     def encode_guess(self, y):
+        """Devuelve el valor más alto de una salida de la red"""
         return np.where(y == np.amax(y))[0][0]
 
     def print_weights(self):
