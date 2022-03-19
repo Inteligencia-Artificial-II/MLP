@@ -169,6 +169,11 @@ class MLP:
             # Si se llegó al número máximo de épocas o si el mse es menor al error mínimo deseado
             if epoch == max_epoch or mean_sqr_error < min_error:
                 break
+        return epoch
+
+
+    def encode_guess(self, y):
+        return np.where(y == np.amax(y))[0][0]
 
     def print_weights(self):
         print("inputs: ", self.W_inputs)

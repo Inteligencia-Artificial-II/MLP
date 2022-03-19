@@ -36,6 +36,7 @@ class Plotter:
         self.default_lr = 0.3
         self.default_layers = 1
         self.default_neurons = 4
+        self.default_algorithm = "Gradiente estocastico"
 
         # inicializamos la ventana principal
         self.window = Tk()
@@ -117,20 +118,29 @@ class Plotter:
         self.mlp.lr = float(self.learning_rate.get())
         self.mlp.error_figure = self.fig2
         self.mlp.plot_mse = self.plot_mse
-        self.mlp.train(self.X,
+        iter = self.mlp.train(self.X,
                 self.Y,
                 int(self.max_epoch.get()),
                 float(self.min_error.get()))
+
+        if iter == int(self.max_epoch.get()):
+            self.converged_text['text'] = "Número máximo de epocas alcazada"
+        else:
+            self.converged_text['text'] = f'El set de datos convergió en {iter} epocas'
+        self.converged_text.grid(row=5, column=0, columnspan=8, sticky="we")
         # establecemos el modo de evaluación
         self.is_training = not self.is_training
         self.params_container.grid_remove()
-        self.reset_container.grid(row=2, column=0, columnspan=6, sticky="we")
+        self.reset_container.grid(row=6, column=0, columnspan=8)
 
     def evaluate(self):
-        print("evaluando")
+        """Obtiene la predicción de las clases correctas de los datos de prueba"""
+        self.clear_plot(self.fig)
+        self.plot_training_data()
         for i in self.test_data:
             res = self.mlp.feed_forward(i)
-            print(res)
+            self.plot_point(i, self.mlp.encode_guess(res))
+        self.fig.canvas.draw()
 
     def restart(self):
         """devuelve los valores y elementos gráficos a su estado inicial"""
@@ -139,11 +149,18 @@ class Plotter:
         self.clear_plot(self.fig)
         self.is_training = not self.is_training
         self.test_data.clear()
+        self.X.clear()
+        self.Y.clear()
         self.input_class.set(0)
         self.learning_rate.set(self.default_lr)
         self.max_epoch.set(self.default_epoch)
         self.min_error.set(self.default_min_error)
         self.layers.set(self.default_layers)
         self.neurons.set(self.default_neurons)
+        self.algorithms.set(self.default_algorithm)
         self.reset_container.grid_remove()
-        self.params_container.grid(row=2, column=0, columnspan=6, sticky="we")
+        self.run_btn['state'] = DISABLED
+        self.weight_btn['state'] = DISABLED
+        self.converged_text['text'] = ''
+        self.converged_text.grid_remove()
+        self.params_container.grid(row=5, column=0, columnspan=8, sticky="we")
