@@ -16,6 +16,10 @@ class Plotter:
         # establecemos los limites de la gráfica
         self.ax.set_xlim([self.ax_min, self.ax_max])
         self.ax.set_ylim([self.ax_min, self.ax_max])
+        self.ax.set_facecolor("#dedede")
+        self.ax2.set_facecolor("#dedede")
+        bbox = self.ax.get_window_extent().transformed(self.fig.dpi_scale_trans.inverted())
+        self.width, self.height = bbox.width, bbox.height
 
         # definimos la que será una instancia de la clase mlp
         self.mlp = None
@@ -55,11 +59,11 @@ class Plotter:
             if self.is_training:
                 self.X.append((event.xdata, event.ydata))
                 self.Y.append(int(self.input_class.get()))
-                self.plot_point((event.xdata, event.ydata), self.input_class.get())
+                self.plot_point((event.xdata, event.ydata), None, self.input_class.get())
                 self.fig.canvas.draw()
             else:
                 self.test_data.append((event.xdata, event.ydata))
-                self.plot_point((event.xdata, event.ydata))
+                self.plot_point((event.xdata, event.ydata), None, None)
                 self.fig.canvas.draw()
 
         self.outputs_class = len(np.unique(self.Y))
@@ -84,22 +88,39 @@ class Plotter:
         self.mlp.randomize_weights()
         self.run_btn["state"] = NORMAL
 
-    def plot_point(self, point: tuple, cluster=None):
+    def plot_point(self, point: tuple, alpha=None, cluster=None):
         """Toma un array de tuplas y las añade los puntos en la figura con el
         color de su cluster"""
         plt.figure(1)
-        if (cluster == None):
+        cmap = get_cmap('flag')
+        if (cluster == None): # clase desconocida
             plt.plot(point[0], point[1], 'o', color='k')
-        else:
-            cmap = get_cmap('flag')
+        elif alpha != None: # degradado
             color = cmap(float(int(cluster)/100))
-            plt.plot(point[0], point[1], 'o', color=color)
+            offset = 0.25
+            alpha = (alpha - offset) if (alpha - offset) > 0 else 0
+            plt.plot(point[0], point[1], 'o', color=color, markersize=7, markeredgewidth=0, alpha=alpha)
+        else: # entrenamiento
+            color = cmap(float(int(cluster)/100))
+            plt.plot(point[0], point[1], 'o', markeredgecolor='k', markeredgewidth=1.5, color=color)
+    
+    
+    def plot_gradient(self):
+        """gráfica el degradado de las clases"""
+        x = np.linspace(self.ax_min, self.ax_max, 40)
+        y = np.linspace(self.ax_min, self.ax_max, 30)
+
+        for i in range(len(x)):
+            for j in range(len(y)):
+                res = self.mlp.feed_forward((x[i], y[j]))
+                cluster = self.mlp.encode_guess(res)
+                self.plot_point((x[i], y[j]), res[cluster], cluster)
 
     def plot_training_data(self):
         """Grafica los datos de entrenamiento"""
         plt.figure(1)
         for i in range(len(self.Y)):
-            self.plot_point(self.X[i], self.Y[i])
+            self.plot_point(self.X[i], None,  self.Y[i])
 
     def clear_plot(self, fig, fig_index = 1):
         """Borra los puntos del canvas"""
@@ -143,10 +164,11 @@ class Plotter:
     def evaluate(self):
         """Obtiene la predicción de las clases correctas de los datos de prueba"""
         self.clear_plot(self.fig)
+        self.plot_gradient()
         self.plot_training_data()
         for i in self.test_data:
             res = self.mlp.feed_forward(i)
-            self.plot_point(i, self.mlp.encode_guess(res))
+            self.plot_point(i, None, self.mlp.encode_guess(res))
         self.fig.canvas.draw()
 
     def restart(self):
