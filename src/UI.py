@@ -1,4 +1,4 @@
-from tkinter import Frame, Label, Button, DISABLED, ttk
+from tkinter import Frame, Label, Button, DISABLED, ttk, Spinbox, IntVar
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from sys import exit
 import numpy as np
@@ -19,10 +19,9 @@ def render_main_window(self):
 
     # Nos permitirá elegir la clase a dibujar en el plano
     Label(self.params_container, bg="white", text="Clase: ").grid(row=0, column=1, columnspan=2, sticky="e")
-    self.input_class = ttk.Combobox(self.params_container, state="readonly")
-    self.input_class["values"] = list(range(0, 100))
-    self.input_class.set(0)
-
+    self.default_class = IntVar(self.params_container)
+    self.input_class = Spinbox(self.params_container, state="readonly", textvariable=self.default_class, from_=0, to=100)
+    
     # contendrá la columna izquierda de parámetros
     self.left_container = Frame(self.params_container, bg="white", padx=40, pady=20)
 

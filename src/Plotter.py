@@ -43,6 +43,14 @@ class Plotter:
         self.window.mainloop()
 
     def set_point(self, event):
+        """Añade las coordenadas tanto de los puntos de entrenamiento como los de prueba"""
+        # validación para no ingresar clases salteadas
+        if int(self.input_class.get()) != 0:
+            last_class = int(self.input_class.get()) - 1
+            if len(np.where(np.array(self.Y)==last_class)[0]) == 0:
+                self.default_class.set(last_class)
+                return
+
         if event.xdata != None or event.ydata != None:
             if self.is_training:
                 self.X.append((event.xdata, event.ydata))
@@ -150,7 +158,7 @@ class Plotter:
         self.test_data.clear()
         self.X.clear()
         self.Y.clear()
-        self.input_class.set(0)
+        self.default_class.set(0)
         self.learning_rate.set(self.default_lr)
         self.max_epoch.set(self.default_epoch)
         self.min_error.set(self.default_min_error)

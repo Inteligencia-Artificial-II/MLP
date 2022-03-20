@@ -158,6 +158,7 @@ class MLP:
 
             # Se obtiene la media del error cuadrático y hacemos que el mse sea cero
             mean_sqr_error = epoch_sqr_error / m
+            print(f'Epoca: {epoch} | Error cuadrático: {mean_sqr_error}')
             mse_list.append(mean_sqr_error)
             epoch_sqr_error = 0
             epoch += 1
