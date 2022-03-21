@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 class MLP:
     def __init__(self, i_neurons, h_layers, h_neurons, o_neurons):
@@ -133,14 +132,14 @@ class MLP:
         # numero de clases
         n = len(np.unique(Y))
         # matriz de confusion
-        conf_matrix = np.zeros((n+1, n+1))
+        conf_matrix = np.zeros((n + 1, n + 1))
 
         # por cada elemento del set de datos de entrenamiento obtenemos su clasificación
         count = 0
         for i in X:
             evaluate = self.feed_forward(i)
-            guessed = np.where(evaluate == max(evaluate))[0][0]
-            actual = np.where(D[count] == max(D[count]))[0][0]
+            guessed = self.encode_guess(evaluate)
+            actual = self.encode_guess(D[count])
             conf_matrix[guessed][actual] += 1
             count += 1
 
@@ -153,7 +152,16 @@ class MLP:
         
         conf_matrix[n][n] = column_sum.sum()
 
-        print("Matrix: ", conf_matrix)
+        print("\nMatriz de confusión:")
+        print("Filas = clases obtenidas por el MLP")
+        print("Columnas = clases reales")
+        print("clase|", end="")
+        for i in range(n):
+            print(f"{i}|", end="")
+        print("total|")
+        for i in range(n):
+            print(f"{i}    |{conf_matrix[i]}")
+        print(f"total|{conf_matrix[n]}")
 
     def train(self, X: list, Y: list, max_epoch: int, min_error: float):
         """Se entrena el mlp usando feed_forward y backpropagation"""
@@ -186,6 +194,7 @@ class MLP:
 
             # Se obtiene la media del error cuadrático y hacemos que el mse sea cero
             mean_sqr_error = epoch_sqr_error / m
+            print(f'Epoca: {epoch} | Error cuadrático: {mean_sqr_error}')
             mse_list.append(mean_sqr_error)
             epoch_sqr_error = 0
             epoch += 1
@@ -198,6 +207,12 @@ class MLP:
                 break
         
         self.get_confusion_matrix(X, y, D)
+        return epoch
+
+
+    def encode_guess(self, y):
+        """Devuelve el valor más alto de una salida de la red"""
+        return np.where(y == np.amax(y))[0][0]
 
     def print_weights(self):
         print("inputs: ", self.W_inputs)

@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
-from matplotlib.backend_bases import MouseButton
 from matplotlib.cm import get_cmap
-from tkinter import NORMAL, DISABLED, messagebox, Tk
+from tkinter import NORMAL, DISABLED, Tk
 from src.UI import render_main_window
 from src.MLP import MLP
 import numpy as np
@@ -17,6 +16,10 @@ class Plotter:
         # establecemos los limites de la gráfica
         self.ax.set_xlim([self.ax_min, self.ax_max])
         self.ax.set_ylim([self.ax_min, self.ax_max])
+        self.ax.set_facecolor("#dedede")
+        self.ax2.set_facecolor("#dedede")
+        bbox = self.ax.get_window_extent().transformed(self.fig.dpi_scale_trans.inverted())
+        self.width, self.height = bbox.width, bbox.height
 
         # definimos la que será una instancia de la clase mlp
         self.mlp = None
@@ -36,6 +39,7 @@ class Plotter:
         self.default_lr = 0.3
         self.default_layers = 1
         self.default_neurons = 4
+        self.default_algorithm = "Gradiente estocastico"
 
         # inicializamos la ventana principal
         self.window = Tk()
@@ -43,15 +47,23 @@ class Plotter:
         self.window.mainloop()
 
     def set_point(self, event):
+        """Añade las coordenadas tanto de los puntos de entrenamiento como los de prueba"""
+        # validación para no ingresar clases salteadas
+        if int(self.input_class.get()) != 0:
+            last_class = int(self.input_class.get()) - 1
+            if len(np.where(np.array(self.Y)==last_class)[0]) == 0:
+                self.default_class.set(last_class)
+                return
+
         if event.xdata != None or event.ydata != None:
             if self.is_training:
                 self.X.append((event.xdata, event.ydata))
                 self.Y.append(int(self.input_class.get()))
-                self.plot_point((event.xdata, event.ydata), self.input_class.get())
+                self.plot_point((event.xdata, event.ydata), None, self.input_class.get())
                 self.fig.canvas.draw()
             else:
                 self.test_data.append((event.xdata, event.ydata))
-                self.plot_point((event.xdata, event.ydata))
+                self.plot_point((event.xdata, event.ydata), None, None)
                 self.fig.canvas.draw()
 
         self.outputs_class = len(np.unique(self.Y))
@@ -76,22 +88,39 @@ class Plotter:
         self.mlp.randomize_weights()
         self.run_btn["state"] = NORMAL
 
-    def plot_point(self, point: tuple, cluster=None):
+    def plot_point(self, point: tuple, alpha=None, cluster=None):
         """Toma un array de tuplas y las añade los puntos en la figura con el
         color de su cluster"""
         plt.figure(1)
-        if (cluster == None):
+        cmap = get_cmap('flag')
+        if (cluster == None): # clase desconocida
             plt.plot(point[0], point[1], 'o', color='k')
-        else:
-            cmap = get_cmap('flag')
+        elif alpha != None: # degradado
             color = cmap(float(int(cluster)/100))
-            plt.plot(point[0], point[1], 'o', color=color)
+            offset = 0.25
+            alpha = (alpha - offset) if (alpha - offset) > 0 else 0
+            plt.plot(point[0], point[1], 'o', color=color, markersize=7, markeredgewidth=0, alpha=alpha)
+        else: # entrenamiento
+            color = cmap(float(int(cluster)/100))
+            plt.plot(point[0], point[1], 'o', markeredgecolor='k', markeredgewidth=1.5, color=color)
+    
+    
+    def plot_gradient(self):
+        """gráfica el degradado de las clases"""
+        x = np.linspace(self.ax_min, self.ax_max, 40)
+        y = np.linspace(self.ax_min, self.ax_max, 30)
+
+        for i in range(len(x)):
+            for j in range(len(y)):
+                res = self.mlp.feed_forward((x[i], y[j]))
+                cluster = self.mlp.encode_guess(res)
+                self.plot_point((x[i], y[j]), res[cluster], cluster)
 
     def plot_training_data(self):
         """Grafica los datos de entrenamiento"""
         plt.figure(1)
         for i in range(len(self.Y)):
-            self.plot_point(self.X[i], self.Y[i])
+            self.plot_point(self.X[i], None,  self.Y[i])
 
     def clear_plot(self, fig, fig_index = 1):
         """Borra los puntos del canvas"""
@@ -117,20 +146,30 @@ class Plotter:
         self.mlp.lr = float(self.learning_rate.get())
         self.mlp.error_figure = self.fig2
         self.mlp.plot_mse = self.plot_mse
-        self.mlp.train(self.X,
+        iter = self.mlp.train(self.X,
                 self.Y,
                 int(self.max_epoch.get()),
                 float(self.min_error.get()))
+
+        if iter == int(self.max_epoch.get()):
+            self.converged_text['text'] = "Número máximo de epocas alcazada"
+        else:
+            self.converged_text['text'] = f'El set de datos convergió en {iter} epocas'
+        self.converged_text.grid(row=5, column=0, columnspan=8, sticky="we")
         # establecemos el modo de evaluación
         self.is_training = not self.is_training
         self.params_container.grid_remove()
-        self.reset_container.grid(row=3, column=0, columnspan=8, sticky="we")
+        self.reset_container.grid(row=6, column=0, columnspan=8)
 
     def evaluate(self):
-        print("evaluando")
+        """Obtiene la predicción de las clases correctas de los datos de prueba"""
+        self.clear_plot(self.fig)
+        self.plot_gradient()
+        self.plot_training_data()
         for i in self.test_data:
             res = self.mlp.feed_forward(i)
-            print(res)
+            self.plot_point(i, None, self.mlp.encode_guess(res))
+        self.fig.canvas.draw()
 
     def restart(self):
         """devuelve los valores y elementos gráficos a su estado inicial"""
@@ -139,11 +178,18 @@ class Plotter:
         self.clear_plot(self.fig)
         self.is_training = not self.is_training
         self.test_data.clear()
-        self.input_class.set(0)
+        self.X.clear()
+        self.Y.clear()
+        self.default_class.set(0)
         self.learning_rate.set(self.default_lr)
         self.max_epoch.set(self.default_epoch)
         self.min_error.set(self.default_min_error)
         self.layers.set(self.default_layers)
         self.neurons.set(self.default_neurons)
+        self.algorithms.set(self.default_algorithm)
         self.reset_container.grid_remove()
-        self.params_container.grid(row=3, column=0, columnspan=8, sticky="we")
+        self.run_btn['state'] = DISABLED
+        self.weight_btn['state'] = DISABLED
+        self.converged_text['text'] = ''
+        self.converged_text.grid_remove()
+        self.params_container.grid(row=5, column=0, columnspan=8, sticky="we")
