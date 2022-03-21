@@ -28,6 +28,8 @@ class MLP:
         # Función del plotter para imprimir los pesos de la primer capa oculta
         self.plot_weights = None
 
+        self.show_weights = None
+
         # matrices de pesos
         # pesos de la entrada a la primer capa oculta
         self.W_inputs = np.empty((self.hidden_neurons, self.input_neurons + 1))
@@ -42,6 +44,8 @@ class MLP:
         self.W_inputs = np.random.uniform(-1, 1, self.W_inputs.shape)
         self.W_hiddens = np.random.uniform(-1, 1, self.W_hiddens.shape)
         self.W_outputs = np.random.uniform(-1, 1, self.W_outputs.shape)
+        if self.show_weights != None:
+            self.show_weights()
 
     def sigmoid(self, y):
         """Función de activación"""
@@ -120,6 +124,9 @@ class MLP:
         a = np.insert(a, 0, -1)
         self.W_inputs += -self.lr * np.multiply(np.array(self.sensitivities[0]), a.T)
 
+        if self.show_weights != None:
+            self.show_weights()
+
     def encode_desired_output(self, Y: list):
         """Retorna una matriz de valores codificados para representar los valores
         del vector de valores deseados Y"""
@@ -181,7 +188,7 @@ class MLP:
         # Número de épocas
         epoch = 0
         # acumulador de sensibilidades
-        s = np.zeros_like(np.array(self.sensitivities))
+        s = [0 for i in range(len(self.sensitivities))]
 
         while True:
             # Se itera por cada fila de X
@@ -213,7 +220,7 @@ class MLP:
             print(f'Epoca: {epoch} | Error cuadrático: {mean_sqr_error}')
             mse_list.append(mean_sqr_error)
             epoch_sqr_error = 0
-            s = np.zeros_like(np.array(self.sensitivities))
+            s = [0 for i in range(len(self.sensitivities))]
             epoch += 1
 
             if self.plot_mse != None:
@@ -224,7 +231,7 @@ class MLP:
                 break
         
         self.get_confusion_matrix(X, y, D)
-        return epoch
+        return epoch, mean_sqr_error
 
 
     def encode_guess(self, y):

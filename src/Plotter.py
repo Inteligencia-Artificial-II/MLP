@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
-from tkinter import NORMAL, DISABLED, Tk
-from src.UI import render_main_window
+from tkinter import NORMAL, DISABLED, Tk, Toplevel
+from src.UI import render_main_window, render_table
 from src.MLP import MLP
 import numpy as np
 
@@ -46,6 +46,7 @@ class Plotter:
         # inicializamos la ventana principal
         self.window = Tk()
         render_main_window(self)
+        self.table_window = None
         self.window.mainloop()
 
     def set_point(self, event):
@@ -87,6 +88,7 @@ class Plotter:
                            int(self.neurons.get()),
                            self.outputs_class)
 
+        self.mlp.show_weights = self.show_weights
         self.mlp.randomize_weights()
         self.plot_weights(self.mlp.W_inputs)
         self.run_btn["state"] = NORMAL
@@ -154,6 +156,14 @@ class Plotter:
             plt.plot(self.x1_line, x2, color=color)
         self.fig.canvas.draw()
 
+    def show_weights(self):
+        if self.checkbox_value.get():
+            try:
+                render_table(self)
+            except Exception:
+                self.table_window = Toplevel(self.window)
+                render_table(self)
+
     def run(self):
         """es ejecutada cuando el botón de «entrenar» es presionado"""
         # entrenamos la red con los datos ingresados
@@ -164,20 +174,21 @@ class Plotter:
         
         iter = 0
         if(self.algorithms.get() == "Gradiente estocastico"):
-            iter = self.mlp.train(self.X,
+            iter, err = self.mlp.train(self.X,
                     self.Y,
                     int(self.max_epoch.get()),
                     float(self.min_error.get()), False)
         elif(self.algorithms.get() == "Lotes"):
-            iter = self.mlp.train(self.X,
+            iter, err = self.mlp.train(self.X,
                     self.Y,
                     int(self.max_epoch.get()),
                     float(self.min_error.get()), True)
 
+        err = round(err, 4)
         if iter == int(self.max_epoch.get()):
-            self.converged_text['text'] = "Número máximo de epocas alcazada"
+            self.converged_text['text'] = f'Número máximo de epocas alcazada, con un error de {err}'
         else:
-            self.converged_text['text'] = f'El set de datos convergió en {iter} epocas'
+            self.converged_text['text'] = f'El set de datos convergió en {iter} epocas, con un error de {err}'
         self.converged_text.grid(row=5, column=0, columnspan=8, sticky="we")
         # establecemos el modo de evaluación
         self.is_training = not self.is_training
@@ -196,6 +207,9 @@ class Plotter:
 
     def restart(self):
         """devuelve los valores y elementos gráficos a su estado inicial"""
+        if self.table_window != None:
+            self.table_window.destroy()
+        self.checkbox_value.set(False)
         self.clear_plot(self.fig2, 2)
         plt.figure(1)
         self.clear_plot(self.fig)

@@ -1,7 +1,32 @@
-from tkinter import Frame, Label, Button, DISABLED, ttk, Spinbox, IntVar
+from tkinter import Frame, Label, Button, DISABLED, CENTER, NO, ttk, Spinbox, IntVar, Toplevel, BooleanVar
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from sys import exit
 import numpy as np
+
+def render_table(self):
+    if self.mlp != None:
+        self.table = ttk.Treeview(self.table_window)
+        Label(self.table_window, text="Capa final", bg="white", font=("Arial", 15)).grid(row=0, column=0, columnspan=len(self.mlp.W_outputs[0]), sticky="we")
+        get_table(self.table, self.mlp.W_outputs)
+        self.table.grid(row=1, column=0)
+        if self.mlp.hidden_layers == 1:
+            self.table1 = ttk.Treeview(self.table_window)
+            Label(self.table_window, text="Primer capa oculta", bg="white", font=("Arial", 15)).grid(row=2, column=0, columnspan=len(self.mlp.W_hiddens[0,0]), sticky="we")
+            get_table(self.table1, self.mlp.W_hiddens[0])
+            self.table1.grid(row=3, column=0)
+
+def get_table(table, W):
+    table['columns'] = [f'W{i}' for i in range(len(W[0]))]
+    table.column("#0", width=0,  stretch=NO)
+    table.heading("#0", text="",anchor=CENTER)
+    for i in table['columns']:
+        table.column(i, anchor=CENTER, width=120)
+        table.heading(i, text=i, anchor=CENTER)
+
+    for i in range(len(W)):
+        values = [j for j in W[i]]
+        table.insert(parent='',index='end',iid=i,text='',
+        values=values)
 
 def render_main_window(self):
     """Definimos la interfaz gráfica de usuario"""
@@ -60,9 +85,12 @@ def render_main_window(self):
     self.algorithms["values"] = ["Gradiente estocastico", "Lotes"]
     self.algorithms.set(self.default_algorithm)
 
+
     self.right_container = Frame(self.params_container, bg="white", padx=40, pady=20)
     self.weight_btn = Button(self.right_container, bg="white",text="Inicializar pesos", command=self.init_weights, state=DISABLED)
     self.run_btn = Button(self.right_container, text="Entrenar", command=self.run, state=DISABLED)
+    self.checkbox_value = BooleanVar(self.right_container)
+    self.checkbox = ttk.Checkbutton(self.right_container, text="Mostar pesos", variable=self.checkbox_value)
 
     self.params_container.grid(row=5, column=0, columnspan=8, sticky="we")
     self.left_container.grid(row=1, column=0, columnspan=2, sticky="we")
@@ -76,6 +104,7 @@ def render_main_window(self):
     self.algorithms.grid(row=2, column=3, sticky="w")
     self.weight_btn.grid(row=0, column=0, sticky="we")
     self.run_btn.grid(row=1, column=0, sticky="we")
+    self.checkbox.grid(row=2, column=0, sticky="we")
     self.input_class.grid(row=0, column=3, sticky="w")
 
     # contenedor de la interfaz después de entrenar
