@@ -25,6 +25,9 @@ class MLP:
         # Función del plotter para imprimir el mse
         self.plot_mse = None
 
+        # Función del plotter para imprimir los pesos de la primer capa oculta
+        self.plot_weights = None
+
         # matrices de pesos
         # pesos de la entrada a la primer capa oculta
         self.W_inputs = np.empty((self.hidden_neurons, self.input_neurons + 1))
@@ -189,18 +192,18 @@ class MLP:
 
                 # Se calculan las sensibilidades
                 self.get_sensitivity(error)
-                print("Antes de add", self.sensitivities)
 
                 # Se ajustan los pesos
-                if(batch == False):
+                if not batch:
                     self.backpropagation(X[i])
                 else:
                     s = np.add(np.array(self.sensitivities), s)
-                    print("Después de add", s)
-                    #input()
-                    
-            
-            if(batch == True):
+
+            # Se imprimen los pesos de la capa oculta por época
+            if self.plot_weights != None:
+                self.plot_weights(self.W_inputs, 'g')
+
+            if batch:
                 self.sensitivities = np.divide(s, m)
                 for i in range(m):
                     self.backpropagation(X[i])

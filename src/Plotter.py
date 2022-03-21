@@ -18,8 +18,6 @@ class Plotter:
         self.ax.set_ylim([self.ax_min, self.ax_max])
         self.ax.set_facecolor("#dedede")
         self.ax2.set_facecolor("#dedede")
-        bbox = self.ax.get_window_extent().transformed(self.fig.dpi_scale_trans.inverted())
-        self.width, self.height = bbox.width, bbox.height
 
         # definimos la que será una instancia de la clase mlp
         self.mlp = None
@@ -40,6 +38,10 @@ class Plotter:
         self.default_layers = 1
         self.default_neurons = 4
         self.default_algorithm = "Gradiente estocastico"
+
+        # Línea de puntos para obtener x2 al imprimir pesos
+        self.x1_density = 100
+        self.x1_line = np.linspace(self.ax_min, self.ax_max, self.x1_density)
 
         # inicializamos la ventana principal
         self.window = Tk()
@@ -86,6 +88,7 @@ class Plotter:
                            self.outputs_class)
 
         self.mlp.randomize_weights()
+        self.plot_weights(self.mlp.W_inputs)
         self.run_btn["state"] = NORMAL
 
     def plot_point(self, point: tuple, alpha=None, cluster=None):
@@ -140,12 +143,24 @@ class Plotter:
         self.fig2.canvas.flush_events()
         plt.figure(1)
 
+    def plot_weights(self, W, color = 'r'):
+        """Imprime las rectas de pesos de la primer capa del MLP"""
+        self.clear_plot(self.fig)
+        self.plot_training_data()
+
+        m, _ = W.shape
+        for i in range(m):
+            x2 = (-W[i, 1] * self.x1_line - W[i, 0]) / W[i, -1]
+            plt.plot(self.x1_line, x2, color=color)
+        self.fig.canvas.draw()
+
     def run(self):
         """es ejecutada cuando el botón de «entrenar» es presionado"""
         # entrenamos la red con los datos ingresados
         self.mlp.lr = float(self.learning_rate.get())
         self.mlp.error_figure = self.fig2
         self.mlp.plot_mse = self.plot_mse
+        self.mlp.plot_weights = self.plot_weights
         
         iter = 0
         if(self.algorithms.get() == "Gradiente estocastico"):
