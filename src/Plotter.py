@@ -146,10 +146,18 @@ class Plotter:
         self.mlp.lr = float(self.learning_rate.get())
         self.mlp.error_figure = self.fig2
         self.mlp.plot_mse = self.plot_mse
-        iter = self.mlp.train(self.X,
-                self.Y,
-                int(self.max_epoch.get()),
-                float(self.min_error.get()))
+        
+        iter = 0
+        if(self.algorithms.get() == "Gradiente estocastico"):
+            iter = self.mlp.train(self.X,
+                    self.Y,
+                    int(self.max_epoch.get()),
+                    float(self.min_error.get()), False)
+        elif(self.algorithms.get() == "Lotes"):
+            iter = self.mlp.train(self.X,
+                    self.Y,
+                    int(self.max_epoch.get()),
+                    float(self.min_error.get()), True)
 
         if iter == int(self.max_epoch.get()):
             self.converged_text['text'] = "Número máximo de epocas alcazada"

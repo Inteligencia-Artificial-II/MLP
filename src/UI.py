@@ -57,7 +57,7 @@ def render_main_window(self):
 
     Label(self.center_container, bg="white", text="Algoritmo: ").grid(row=2, column=2, sticky="e")
     self.algorithms = ttk.Combobox(self.center_container, state="readonly")
-    self.algorithms["values"] = ["Gradiente estocastico", "Lotes", "Mini-lotes"]
+    self.algorithms["values"] = ["Gradiente estocastico", "Lotes"]
     self.algorithms.set(self.default_algorithm)
 
     self.right_container = Frame(self.params_container, bg="white", padx=40, pady=20)

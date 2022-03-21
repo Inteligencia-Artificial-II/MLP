@@ -98,7 +98,7 @@ class MLP:
             s = np.dot(np.dot(self.jacobian(self.sigmoids[layer]), self.W_hiddens[i, :, 1:].T), s)
             self.sensitivities[layer] = s.copy()
             layer -= 1
-
+    
     def backpropagation(self, inputs):
         """Realiza el método de retropropagación"""
         # actualiza los pesos de la capa oculta final con la capa de salida
@@ -117,7 +117,6 @@ class MLP:
         a = np.insert(a, 0, -1)
         self.W_inputs += -self.lr * np.multiply(np.array(self.sensitivities[0]), a.T)
 
-
     def encode_desired_output(self, Y: list):
         """Retorna una matriz de valores codificados para representar los valores
         del vector de valores deseados Y"""
@@ -127,10 +126,10 @@ class MLP:
             D[i, Y[i]] = 1
         return D
 
-    def train(self, X: list, Y: list, max_epoch: int, min_error: float):
+    def train(self, X: list, Y: list, max_epoch: int, min_error: float, batch: bool):
         """Se entrena el mlp usando feed_forward y backpropagation"""
-        # Se calcula la cantidad de filas m y la cantidad de columnas n de X
-        m, n = len(X), len(X[0])
+        # Se calcula la cantidad de filas m
+        m = len(X)
         # vector de datos correctos y codificado
         D = self.encode_desired_output(Y)
 
@@ -142,25 +141,40 @@ class MLP:
         epoch_sqr_error = 0
         # Número de épocas
         epoch = 0
+        # acumulador de sensibilidades
+        s = np.zeros_like(np.array(self.sensitivities))
 
         while True:
             # Se itera por cada fila de X
             for i in range(m):
                 y = self.feed_forward(X[i])
                 error = np.subtract(D[i], y)
-                epoch_sqr_error += np.sum(error ** 2)
+                epoch_sqr_error += np.sum(error ** 2)    
 
                 # Se calculan las sensibilidades
                 self.get_sensitivity(error)
+                print("Antes de add", self.sensitivities)
 
                 # Se ajustan los pesos
-                self.backpropagation(X[i])
+                if(batch == False):
+                    self.backpropagation(X[i])
+                else:
+                    s = np.add(np.array(self.sensitivities), s)
+                    print("Después de add", s)
+                    #input()
+                    
+            
+            if(batch == True):
+                self.sensitivities = np.divide(s, m)
+                for i in range(m):
+                    self.backpropagation(X[i])
 
             # Se obtiene la media del error cuadrático y hacemos que el mse sea cero
             mean_sqr_error = epoch_sqr_error / m
             print(f'Epoca: {epoch} | Error cuadrático: {mean_sqr_error}')
             mse_list.append(mean_sqr_error)
             epoch_sqr_error = 0
+            s = np.zeros_like(np.array(self.sensitivities))
             epoch += 1
 
             if self.plot_mse != None:
