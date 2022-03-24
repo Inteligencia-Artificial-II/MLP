@@ -49,6 +49,10 @@ class Plotter:
         self.table_window = None
         self.window.mainloop()
 
+    def set_window_to_none(self):
+        self.table_window.destroy()
+        self.table_window = None
+
     def set_point(self, event):
         """Añade las coordenadas tanto de los puntos de entrenamiento como los de prueba"""
         # validación para no ingresar clases salteadas
@@ -108,8 +112,8 @@ class Plotter:
         else: # entrenamiento
             color = cmap(float(int(cluster)/100))
             plt.plot(point[0], point[1], 'o', markeredgecolor='k', markeredgewidth=1.5, color=color)
-    
-    
+
+
     def plot_gradient(self):
         """gráfica el degradado de las clases"""
         x = np.linspace(self.ax_min, self.ax_max, 40)
@@ -158,11 +162,11 @@ class Plotter:
 
     def show_weights(self):
         if self.checkbox_value.get():
-            try:
-                render_table(self)
-            except Exception:
+            if self.table_window == None:
                 self.table_window = Toplevel(self.window)
-                render_table(self)
+            elif self.table_window.state() != 'normal':
+                self.table_window = Toplevel(self.window)
+            render_table(self)
 
     def run(self):
         """es ejecutada cuando el botón de «entrenar» es presionado"""
@@ -171,7 +175,7 @@ class Plotter:
         self.mlp.error_figure = self.fig2
         self.mlp.plot_mse = self.plot_mse
         self.mlp.plot_weights = self.plot_weights
-        
+
         iter = 0
         if(self.algorithms.get() == "Gradiente estocastico"):
             iter, err = self.mlp.train(self.X,

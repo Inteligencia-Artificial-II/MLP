@@ -17,10 +17,10 @@ class MLP:
         self.error_figure = None
 
         # guarda los valores de activación de todas las capas
-        self.sigmoids = [0 for i in range(2 + self.hidden_layers)]
+        self.sigmoids = [0 for _ in range(2 + self.hidden_layers)]
 
         # guarda las sensibilidades = input layer + output layer + hidden layers
-        self.sensitivities = [0 for i in range(h_layers + 1)]
+        self.sensitivities = [0 for _ in range(h_layers + 1)]
 
         # Función del plotter para imprimir el mse
         self.plot_mse = None
@@ -29,6 +29,13 @@ class MLP:
         self.plot_weights = None
 
         self.show_weights = None
+
+        # Acumulador del gradiente estocástico para calcular lotes
+        self.W_inputs_batch = np.empty((self.hidden_neurons, self.input_neurons + 1))
+        # pesos de las capas ocultas menos la última
+        self.W_hiddens_batch = np.empty((self.hidden_layers, self.hidden_neurons, self.hidden_neurons + 1))
+        # pesos de la última capa oculta y la capa final
+        self.W_outputs_batch = np.empty((self.output_neurons, self.hidden_neurons + 1))
 
         # matrices de pesos
         # pesos de la entrada a la primer capa oculta
@@ -44,6 +51,9 @@ class MLP:
         self.W_inputs = np.random.uniform(-1, 1, self.W_inputs.shape)
         self.W_hiddens = np.random.uniform(-1, 1, self.W_hiddens.shape)
         self.W_outputs = np.random.uniform(-1, 1, self.W_outputs.shape)
+        self.W_inputs_batch = self.W_inputs.copy()
+        self.W_hiddens_batch = self.W_hiddens.copy()
+        self.W_outputs_batch = self.W_outputs.copy()
         if self.show_weights != None:
             self.show_weights()
 
@@ -105,24 +115,33 @@ class MLP:
             s = np.dot(np.dot(self.jacobian(self.sigmoids[layer]), self.W_hiddens[i, :, 1:].T), s)
             self.sensitivities[layer] = s.copy()
             layer -= 1
-    
-    def backpropagation(self, inputs):
+
+    def backpropagation(self, inputs, batch = False):
         """Realiza el método de retropropagación"""
         # actualiza los pesos de la capa oculta final con la capa de salida
         a = np.insert(self.sigmoids[-2], 0, -1) # añade el bias al sigmoide
-        self.W_outputs += -self.lr * np.multiply(np.array(self.sensitivities[-1]), a.T)
+        if not batch:
+            self.W_outputs += -self.lr * np.multiply(np.array(self.sensitivities[-1]), a.T)
+        else:
+            self.W_outputs_batch += -self.lr * np.multiply(np.array(self.sensitivities[-1]), a.T)
 
         # actualiza los pesos de las capas ocultas
         layer = -2
         for i in reversed(range((self.hidden_layers))):
             a = np.insert(self.sigmoids[layer-1], 0, -1) # añade el bias al sigmoide
-            self.W_hiddens[i] += -self.lr * np.multiply(np.array(self.sensitivities[layer]), a.T)
+            if not batch:
+                self.W_hiddens[i] += -self.lr * np.multiply(np.array(self.sensitivities[layer]), a.T)
+            else:
+                self.W_hiddens_batch[i] += -self.lr * np.multiply(np.array(self.sensitivities[layer]), a.T)
             layer -= 1
 
         # actualiza los pesos de la capa de entrada con la primer capa oculta
         a = np.array(inputs)
         a = np.insert(a, 0, -1)
-        self.W_inputs += -self.lr * np.multiply(np.array(self.sensitivities[0]), a.T)
+        if not batch:
+            self.W_inputs += -self.lr * np.multiply(np.array(self.sensitivities[0]), a.T)
+        else:
+            self.W_inputs_batch += -self.lr * np.multiply(np.array(self.sensitivities[0]), a.T)
 
         if self.show_weights != None:
             self.show_weights()
@@ -135,7 +154,7 @@ class MLP:
             # TODO: Cambiar esto para que se puedan poner clases no consecutivas
             D[i, Y[i]] = 1
         return D
-    
+
     def get_confusion_matrix(self, X: list, Y: list, D:list):
         """Se genera la matriz de confusion"""
         # numero de clases
@@ -158,7 +177,7 @@ class MLP:
         for i in range(n):
             conf_matrix[i][n] = row_sum[i]
             conf_matrix[n][i] = column_sum[i]
-        
+
         conf_matrix[n][n] = column_sum.sum()
 
         print("\nMatriz de confusión:")
@@ -187,37 +206,28 @@ class MLP:
         epoch_sqr_error = 0
         # Número de épocas
         epoch = 0
-        # acumulador de sensibilidades
-        sens = [0 for i in range(len(self.sensitivities))]
 
         while True:
             # Se itera por cada fila de X
             for i in range(m):
                 y = self.feed_forward(X[i])
                 error = np.subtract(D[i], y)
-                epoch_sqr_error += np.sum(error ** 2)    
+                epoch_sqr_error += np.sum(error ** 2)
 
                 # Se calculan las sensibilidades
                 self.get_sensitivity(error)
 
                 # Se ajustan los pesos
-                if not batch:
-                    self.backpropagation(X[i])
-                else:
-                    for i in range(len(self.sensitivities)):
-                        sens[i] = np.add(self.sensitivities[i], sens[i])
+                self.backpropagation(X[i], batch)
 
             # Se imprimen los pesos de la capa oculta por época
             if self.plot_weights != None:
                 self.plot_weights(self.W_inputs, 'g')
 
             if batch:
-                for i in range(len(self.sensitivities)):
-                    self.sensitivities[i] = np.divide(sens[i], m)
-                sens = [0 for i in range(len(self.sensitivities))]
-                for i in range(m):
-                    self.backpropagation(X[i])
-                self.sensitivities = [0 for i in range(len(self.sensitivities))]
+                self.W_inputs = np.divide(self.W_inputs_batch, m)
+                self.W_hiddens = np.divide(self.W_hiddens_batch, m)
+                self.W_outputs = np.divide(self.W_outputs_batch, m)
 
             # Se obtiene la media del error cuadrático y hacemos que el mse sea cero
             mean_sqr_error = epoch_sqr_error / m
@@ -232,7 +242,7 @@ class MLP:
             # Si se llegó al número máximo de épocas o si el mse es menor al error mínimo deseado
             if epoch == max_epoch or mean_sqr_error < min_error:
                 break
-        
+
         self.get_confusion_matrix(X, y, D)
         return epoch, mean_sqr_error
 

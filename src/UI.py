@@ -14,6 +14,7 @@ def render_table(self):
             Label(self.table_window, text="Primer capa oculta", bg="white", font=("Arial", 15)).grid(row=2, column=0, columnspan=len(self.mlp.W_hiddens[0,0]), sticky="we")
             get_table(self.table1, self.mlp.W_hiddens[0])
             self.table1.grid(row=3, column=0)
+    self.table_window.protocol('WM_DELETE_WINDOW', self.set_window_to_none)
 
 def get_table(table, W):
     table['columns'] = [f'W{i}' for i in range(len(W[0]))]
@@ -46,7 +47,7 @@ def render_main_window(self):
     Label(self.params_container, bg="white", text="Clase: ").grid(row=0, column=1, columnspan=2, sticky="e")
     self.default_class = IntVar(self.params_container)
     self.input_class = Spinbox(self.params_container, state="readonly", textvariable=self.default_class, from_=0, to=100)
-    
+
     # contendrá la columna izquierda de parámetros
     self.left_container = Frame(self.params_container, bg="white", padx=40, pady=20)
 
