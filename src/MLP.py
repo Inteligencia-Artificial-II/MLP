@@ -17,10 +17,10 @@ class MLP:
         self.error_figure = None
 
         # guarda los valores de activación de todas las capas
-        self.sigmoids = list(range(2 + self.hidden_layers))
+        self.sigmoids = [0 for i in range(2 + self.hidden_layers)]
 
         # guarda las sensibilidades = input layer + output layer + hidden layers
-        self.sensitivities = list(range(h_layers + 1))
+        self.sensitivities = [0 for i in range(h_layers + 1)]
 
         # Función del plotter para imprimir el mse
         self.plot_mse = None
@@ -188,7 +188,7 @@ class MLP:
         # Número de épocas
         epoch = 0
         # acumulador de sensibilidades
-        s = [0 for i in range(len(self.sensitivities))]
+        sens = [0 for i in range(len(self.sensitivities))]
 
         while True:
             # Se itera por cada fila de X
@@ -204,23 +204,26 @@ class MLP:
                 if not batch:
                     self.backpropagation(X[i])
                 else:
-                    s = np.add(np.array(self.sensitivities), s)
+                    for i in range(len(self.sensitivities)):
+                        sens[i] = np.add(self.sensitivities[i], sens[i])
 
             # Se imprimen los pesos de la capa oculta por época
             if self.plot_weights != None:
                 self.plot_weights(self.W_inputs, 'g')
 
             if batch:
-                self.sensitivities = np.divide(s, m)
+                for i in range(len(self.sensitivities)):
+                    self.sensitivities[i] = np.divide(sens[i], m)
+                sens = [0 for i in range(len(self.sensitivities))]
                 for i in range(m):
                     self.backpropagation(X[i])
+                self.sensitivities = [0 for i in range(len(self.sensitivities))]
 
             # Se obtiene la media del error cuadrático y hacemos que el mse sea cero
             mean_sqr_error = epoch_sqr_error / m
             print(f'Epoca: {epoch} | Error cuadrático: {mean_sqr_error}')
             mse_list.append(mean_sqr_error)
             epoch_sqr_error = 0
-            s = [0 for i in range(len(self.sensitivities))]
             epoch += 1
 
             if self.plot_mse != None:
