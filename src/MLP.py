@@ -37,6 +37,11 @@ class MLP:
         # pesos de la última capa oculta y la capa final
         self.W_outputs_batch = np.empty((self.output_neurons, self.hidden_neurons + 1))
 
+        self.gradients = []
+        # Número de épocas
+        self.epoch = 0
+        # Lista de errores cuadráticos medios
+        self.mse_list = []
         # matrices de pesos
         # pesos de la entrada a la primer capa oculta
         self.W_inputs = np.empty((self.hidden_neurons, self.input_neurons + 1))
@@ -116,32 +121,41 @@ class MLP:
             self.sensitivities[layer] = s.copy()
             layer -= 1
 
-    def backpropagation(self, inputs, batch = False):
+    def backpropagation(self, inputs, algorithm):
         """Realiza el método de retropropagación"""
         # actualiza los pesos de la capa oculta final con la capa de salida
         a = np.insert(self.sigmoids[-2], 0, -1) # añade el bias al sigmoide
-        if not batch:
-            self.W_outputs += -self.lr * np.multiply(np.array(self.sensitivities[-1]), a.T)
+        gradient = np.multiply(np.array(self.sensitivities[-1]), a.T)
+        if algorithm == "Stochastic":
+            self.W_outputs += -self.lr * gradient
+        elif algorithm == "Batch":
+            self.W_outputs_batch += -self.lr * gradient
         else:
-            self.W_outputs_batch += -self.lr * np.multiply(np.array(self.sensitivities[-1]), a.T)
+            self.gradients.insert(0, gradient)
 
         # actualiza los pesos de las capas ocultas
         layer = -2
         for i in reversed(range((self.hidden_layers))):
             a = np.insert(self.sigmoids[layer-1], 0, -1) # añade el bias al sigmoide
-            if not batch:
-                self.W_hiddens[i] += -self.lr * np.multiply(np.array(self.sensitivities[layer]), a.T)
+            gradient = np.multiply(np.array(self.sensitivities[layer]), a.T)
+            if algorithm == "Stochastic":
+                self.W_hiddens[i] += -self.lr * gradient
+            elif algorithm == "Batch":
+                self.W_hiddens_batch[i] += -self.lr * gradient
             else:
-                self.W_hiddens_batch[i] += -self.lr * np.multiply(np.array(self.sensitivities[layer]), a.T)
+                self.gradients.insert(0, gradient)
             layer -= 1
 
         # actualiza los pesos de la capa de entrada con la primer capa oculta
         a = np.array(inputs)
         a = np.insert(a, 0, -1)
-        if not batch:
-            self.W_inputs += -self.lr * np.multiply(np.array(self.sensitivities[0]), a.T)
+        gradient = np.multiply(np.array(self.sensitivities[0]), a.T) 
+        if algorithm == "Stochastic":
+            self.W_inputs += -self.lr * gradient
+        elif algorithm == "Batch":
+            self.W_inputs_batch += -self.lr * gradient
         else:
-            self.W_inputs_batch += -self.lr * np.multiply(np.array(self.sensitivities[0]), a.T)
+            self.gradients.insert(0, gradient)
 
         if self.show_weights != None:
             self.show_weights()
@@ -191,7 +205,34 @@ class MLP:
             print(f"{i}    |{conf_matrix[i]}")
         print(f"total|{conf_matrix[n]}")
 
-    def train(self, X: list, Y: list, max_epoch: int, min_error: float, batch: bool):
+    def quickprop(self):
+        for i in reversed(range(len(self.gradients))):
+            miu = 1.75
+            # St
+            s_t = np.linalg.norm(self.gradients[i])
+            # St-1
+            s_t_m1 = np.linalg.norm(self.gradients[i - 1])
+            # incremento de W-1 
+            w_t_m1 = -self.lr * self.gradients[i]
+            div = (s_t_m1 - s_t) 
+            div = div if div != 0 else 0.0001
+            temp = (s_t / div) * w_t_m1
+            if (np.linalg.norm(temp) > np.linalg.norm(miu*w_t_m1)):
+                temp = miu*w_t_m1
+            if (s_t_m1 * s_t < 0):
+                w_t_increment = temp
+            else:
+                w_t_increment = temp + div * s_t
+
+            if i == len(self.gradients)-1:
+                self.W_outputs += w_t_increment
+            elif len(self.gradients) > 2 and i == 1:
+                self.W_hiddens[0] += w_t_increment
+            else:
+                self.W_inputs += w_t_increment
+
+
+    def train(self, X: list, Y: list, max_epoch: int, min_error: float, algorithm: bool):
         """Se entrena el mlp usando feed_forward y backpropagation"""
         # Se calcula la cantidad de filas m
         m = len(X)
@@ -200,12 +241,8 @@ class MLP:
 
         # Error cuadrático medio (mse)
         mean_sqr_error = 0
-        # Lista de errores cuadráticos medios
-        mse_list = []
         # Error cuadrático acumulado por época
         epoch_sqr_error = 0
-        # Número de épocas
-        epoch = 0
 
         while True:
             # Se itera por cada fila de X
@@ -218,33 +255,39 @@ class MLP:
                 self.get_sensitivity(error)
 
                 # Se ajustan los pesos
-                self.backpropagation(X[i], batch)
+                self.backpropagation(X[i], algorithm)
+
+                if algorithm == "Quickprop":
+                    self.quickprop()
+                    self.gradients.clear()
 
             # Se imprimen los pesos de la capa oculta por época
             if self.plot_weights != None:
                 self.plot_weights(self.W_inputs, 'g')
 
-            if batch:
+            if algorithm == "Batch":
                 self.W_inputs = np.divide(self.W_inputs_batch, m)
                 self.W_hiddens = np.divide(self.W_hiddens_batch, m)
                 self.W_outputs = np.divide(self.W_outputs_batch, m)
 
             # Se obtiene la media del error cuadrático y hacemos que el mse sea cero
             mean_sqr_error = epoch_sqr_error / m
-            print(f'Epoca: {epoch} | Error cuadrático: {mean_sqr_error}')
-            mse_list.append(mean_sqr_error)
+            print(f'Epoca: {self.epoch} | Error cuadrático: {mean_sqr_error}')
+            self.mse_list.append(mean_sqr_error)
             epoch_sqr_error = 0
-            epoch += 1
+            self.epoch += 1
 
             if self.plot_mse != None:
-                self.plot_mse(mse_list)
+                self.plot_mse(self.mse_list)
 
             # Si se llegó al número máximo de épocas o si el mse es menor al error mínimo deseado
-            if epoch == max_epoch or mean_sqr_error < min_error:
+            if self.epoch == max_epoch or mean_sqr_error < min_error:
                 break
 
         self.get_confusion_matrix(X, y, D)
-        return epoch, mean_sqr_error
+        self.sigmoids = [0 for _ in range(2 + self.hidden_layers)]
+        self.sensitivities = [0 for _ in range(2 + self.hidden_layers)]
+        return self.epoch, mean_sqr_error
 
 
     def encode_guess(self, y):

@@ -177,16 +177,29 @@ class Plotter:
         self.mlp.plot_weights = self.plot_weights
 
         iter = 0
-        if(self.algorithms.get() == "Gradiente estocastico"):
+        if (self.algorithms.get() == "Gradiente estocastico"):
             iter, err = self.mlp.train(self.X,
                     self.Y,
                     int(self.max_epoch.get()),
-                    float(self.min_error.get()), False)
-        elif(self.algorithms.get() == "Lotes"):
+                    float(self.min_error.get()), "Stochastic")
+        elif (self.algorithms.get() == "Lotes"):
             iter, err = self.mlp.train(self.X,
                     self.Y,
                     int(self.max_epoch.get()),
-                    float(self.min_error.get()), True)
+                    float(self.min_error.get()), "Batch")
+        else:
+            iter, err = self.mlp.train(self.X,
+                    self.Y,
+                    int(self.max_epoch.get()),
+                    float(self.min_error.get()), "Quickprop")
+            if (self.algorithms.get() == "QP + BP"):
+                iter, err = self.mlp.train(self.X,
+                    self.Y,
+                    int(self.max_epoch.get()) + iter,
+                    float(self.min_error.get()), "Stochastic")
+
+        self.mlp.epoch = 0
+        self.mlp.mse_list = []
 
         err = round(err, 4)
         if iter == int(self.max_epoch.get()):
@@ -211,6 +224,7 @@ class Plotter:
 
     def restart(self):
         """devuelve los valores y elementos gráficos a su estado inicial"""
+        self.init_weights()
         if self.table_window != None:
             self.table_window.destroy()
         self.checkbox_value.set(False)
