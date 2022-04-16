@@ -31,7 +31,7 @@ class MLP:
         self.show_weights = None
 
         # Error significativo para QP + BP
-        self.qp_min_error = 0.01
+        self.qp_min_error = 0.1
         self.iter_stuck = 10
         self.best_mse = 0
 
@@ -218,16 +218,10 @@ class MLP:
         epsilon = 1e-6
         if not self.is_st_prev_init:
             self.gradients_prev = [np.random.uniform(-1, 1, self.gradients[i].shape) for i in range(len(self.gradients))]
-            print("gradients_prev: ", self.gradients_prev)
-            input()
             self.is_st_prev_init = True
-        print("gradients: ", self.gradients)
-        print("gradients_prev: ", self.gradients_prev)
         for i, st in enumerate(self.gradients):
-            # miu = 1.75
+            miu = 1.75
             # st - 1
-            print("i: ", i)
-            print("st: ", st)
             st_prev = self.gradients_prev[i]
             # incremento de W-1 
             w_prev = -self.lr * st_prev
@@ -235,35 +229,21 @@ class MLP:
             div[div == 0] = epsilon
             temp = (st / div) * w_prev
 
-            # tmp_w_prev = miu * w_prev
-            # for j in range(len(temp)):
-            #     if temp[j] > tmp_w_prev[j]:
-            #         temp[j] = tmp_w_prev[j]
-            # if np.linalg.norm(temp) > np.linalg.norm(miu * w_prev):
-            #     temp = miu * w_prev
-            # aux = miu * w_prev
-            # temp[temp > aux] = aux
+            if np.linalg.norm(temp) > np.linalg.norm(miu * w_prev):
+                temp = miu * w_prev
 
-            # st_prev_aux = st_prev * st
-            # wt_increment = np.zeros_like(st_prev_aux)
-            # print("wt_increment: ", wt_increment)
-            # for j in range(len(wt_increment)):
-            #     if st_prev_aux[j] < 0:
-            #         wt_increment[j] = temp[j]
-            #     else:
-            #         wt_increment[j] = temp[j] + epsilon * st[j]
-            # if np.linalg.norm(st_prev * st) < 0:
-            #     wt_increment = temp
-            # else:
-            #     wt_increment = temp + epsilon * st
+            if np.linalg.norm(st_prev * st) < 0:
+                wt_increment = temp
+            else:
+                wt_increment = temp + epsilon * st
 
 
             if i == len(self.gradients) - 1:
-                self.W_inputs += temp
+                self.W_inputs += wt_increment
             elif len(self.gradients) > 2 and i == 1:
-                self.W_hiddens[0] += temp
+                self.W_hiddens[0] += wt_increment
             else:
-                self.W_outputs += temp
+                self.W_outputs += wt_increment
 
         self.gradients_prev = self.gradients[:]
 
