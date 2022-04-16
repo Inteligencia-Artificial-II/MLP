@@ -30,6 +30,15 @@ class MLP:
 
         self.show_weights = None
 
+        # Error significativo para QP + BP
+        self.qp_min_error = 0.01
+        self.iter_stuck = 10
+        self.best_mse = 0
+
+        # Valor previo del quickprop
+        self.gradients_prev = []
+        self.is_st_prev_init = False
+
         # Acumulador del gradiente estocástico para calcular lotes
         self.W_inputs_batch = np.empty((self.hidden_neurons, self.input_neurons + 1))
         # pesos de las capas ocultas menos la última
@@ -131,7 +140,7 @@ class MLP:
         elif algorithm == "Batch":
             self.W_outputs_batch += -self.lr * gradient
         else:
-            self.gradients.insert(0, gradient)
+            self.gradients.append(gradient)
 
         # actualiza los pesos de las capas ocultas
         layer = -2
@@ -143,19 +152,19 @@ class MLP:
             elif algorithm == "Batch":
                 self.W_hiddens_batch[i] += -self.lr * gradient
             else:
-                self.gradients.insert(0, gradient)
+                self.gradients.append(gradient)
             layer -= 1
 
         # actualiza los pesos de la capa de entrada con la primer capa oculta
         a = np.array(inputs)
         a = np.insert(a, 0, -1)
-        gradient = np.multiply(np.array(self.sensitivities[0]), a.T) 
+        gradient = np.multiply(np.array(self.sensitivities[0]), a.T)
         if algorithm == "Stochastic":
             self.W_inputs += -self.lr * gradient
         elif algorithm == "Batch":
             self.W_inputs_batch += -self.lr * gradient
         else:
-            self.gradients.insert(0, gradient)
+            self.gradients.append(gradient)
 
         if self.show_weights != None:
             self.show_weights()
@@ -206,33 +215,60 @@ class MLP:
         print(f"total|{conf_matrix[n]}")
 
     def quickprop(self):
-        for i in reversed(range(len(self.gradients))):
-            miu = 1.75
-            # St
-            s_t = np.linalg.norm(self.gradients[i])
-            # St-1
-            s_t_m1 = np.linalg.norm(self.gradients[i - 1])
+        epsilon = 1e-6
+        if not self.is_st_prev_init:
+            self.gradients_prev = [np.random.uniform(-1, 1, self.gradients[i].shape) for i in range(len(self.gradients))]
+            print("gradients_prev: ", self.gradients_prev)
+            input()
+            self.is_st_prev_init = True
+        print("gradients: ", self.gradients)
+        print("gradients_prev: ", self.gradients_prev)
+        for i, st in enumerate(self.gradients):
+            # miu = 1.75
+            # st - 1
+            print("i: ", i)
+            print("st: ", st)
+            st_prev = self.gradients_prev[i]
             # incremento de W-1 
-            w_t_m1 = -self.lr * self.gradients[i]
-            div = (s_t_m1 - s_t) 
-            div = div if div != 0 else 0.0001
-            temp = (s_t / div) * w_t_m1
-            if (np.linalg.norm(temp) > np.linalg.norm(miu*w_t_m1)):
-                temp = miu*w_t_m1
-            if (s_t_m1 * s_t < 0):
-                w_t_increment = temp
-            else:
-                w_t_increment = temp + div * s_t
+            w_prev = -self.lr * st_prev
+            div = (st_prev - st)
+            div[div == 0] = epsilon
+            temp = (st / div) * w_prev
 
-            if i == len(self.gradients)-1:
-                self.W_outputs += w_t_increment
+            # tmp_w_prev = miu * w_prev
+            # for j in range(len(temp)):
+            #     if temp[j] > tmp_w_prev[j]:
+            #         temp[j] = tmp_w_prev[j]
+            # if np.linalg.norm(temp) > np.linalg.norm(miu * w_prev):
+            #     temp = miu * w_prev
+            # aux = miu * w_prev
+            # temp[temp > aux] = aux
+
+            # st_prev_aux = st_prev * st
+            # wt_increment = np.zeros_like(st_prev_aux)
+            # print("wt_increment: ", wt_increment)
+            # for j in range(len(wt_increment)):
+            #     if st_prev_aux[j] < 0:
+            #         wt_increment[j] = temp[j]
+            #     else:
+            #         wt_increment[j] = temp[j] + epsilon * st[j]
+            # if np.linalg.norm(st_prev * st) < 0:
+            #     wt_increment = temp
+            # else:
+            #     wt_increment = temp + epsilon * st
+
+
+            if i == len(self.gradients) - 1:
+                self.W_inputs += temp
             elif len(self.gradients) > 2 and i == 1:
-                self.W_hiddens[0] += w_t_increment
+                self.W_hiddens[0] += temp
             else:
-                self.W_inputs += w_t_increment
+                self.W_outputs += temp
+
+        self.gradients_prev = self.gradients[:]
 
 
-    def train(self, X: list, Y: list, max_epoch: int, min_error: float, algorithm: bool):
+    def train(self, X: list, Y: list, max_epoch: int, min_error: float, algorithm: str):
         """Se entrena el mlp usando feed_forward y backpropagation"""
         # Se calcula la cantidad de filas m
         m = len(X)
@@ -243,6 +279,7 @@ class MLP:
         mean_sqr_error = 0
         # Error cuadrático acumulado por época
         epoch_sqr_error = 0
+        self.is_st_prev_init = False
 
         while True:
             # Se itera por cada fila de X
@@ -257,9 +294,10 @@ class MLP:
                 # Se ajustan los pesos
                 self.backpropagation(X[i], algorithm)
 
-                if algorithm == "Quickprop":
+                if algorithm == "Quickprop" or algorithm == "QP + BP":
                     self.quickprop()
                     self.gradients.clear()
+                    self.gradients = []
 
             # Se imprimen los pesos de la capa oculta por época
             if self.plot_weights != None:
@@ -272,7 +310,20 @@ class MLP:
 
             # Se obtiene la media del error cuadrático y hacemos que el mse sea cero
             mean_sqr_error = epoch_sqr_error / m
+
+            # Se guarda el mejor mse hasta el momento
+            if self.best_mse == 0:
+                self.best_mse = mean_sqr_error
+            elif mean_sqr_error < self.best_mse:
+                self.best_mse = mean_sqr_error
+
             print(f'Epoca: {self.epoch} | Error cuadrático: {mean_sqr_error}')
+            if len(self.mse_list) > 0:
+                print("error actual: ", mean_sqr_error - self.best_mse)
+                print("algoritmo: ", algorithm)
+                # input()
+                if mean_sqr_error - self.best_mse > self.qp_min_error and algorithm == "QP + BP":
+                    break
             self.mse_list.append(mean_sqr_error)
             epoch_sqr_error = 0
             self.epoch += 1

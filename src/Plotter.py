@@ -187,16 +187,20 @@ class Plotter:
                     self.Y,
                     int(self.max_epoch.get()),
                     float(self.min_error.get()), "Batch")
-        else:
+        elif self.algorithms.get() == "Quickprop":
             iter, err = self.mlp.train(self.X,
                     self.Y,
                     int(self.max_epoch.get()),
                     float(self.min_error.get()), "Quickprop")
-            if (self.algorithms.get() == "QP + BP"):
-                iter, err = self.mlp.train(self.X,
+        else:
+            iter, err = self.mlp.train(self.X,
                     self.Y,
-                    int(self.max_epoch.get()) + iter,
-                    float(self.min_error.get()), "Stochastic")
+                    int(self.max_epoch.get()),
+                    float(self.min_error.get()), "QP + BP")
+            iter, err = self.mlp.train(self.X,
+                self.Y,
+                int(self.max_epoch.get()),
+                float(self.min_error.get()), "Stochastic")
 
         self.mlp.epoch = 0
         self.mlp.mse_list = []
