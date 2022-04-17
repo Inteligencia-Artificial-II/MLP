@@ -1,7 +1,7 @@
 import numpy as np
 
 class MLP:
-    def __init__(self, i_neurons, h_layers, h_neurons, o_neurons):
+    def __init__(self, i_neurons, h_layers, h_neurons: tuple, o_neurons):
         # número de neuronas por capa
         self.input_neurons = i_neurons
         self.hidden_neurons = h_neurons
@@ -40,11 +40,11 @@ class MLP:
         self.is_st_prev_init = False
 
         # Acumulador del gradiente estocástico para calcular lotes
-        self.W_inputs_batch = np.empty((self.hidden_neurons, self.input_neurons + 1))
+        self.W_inputs_batch = np.empty((self.hidden_neurons[0], self.input_neurons + 1))
         # pesos de las capas ocultas menos la última
-        self.W_hiddens_batch = np.empty((self.hidden_layers, self.hidden_neurons, self.hidden_neurons + 1))
+        self.W_hiddens_batch = np.empty((self.hidden_layers, self.hidden_neurons[0], self.hidden_neurons[0] + 1))
         # pesos de la última capa oculta y la capa final
-        self.W_outputs_batch = np.empty((self.output_neurons, self.hidden_neurons + 1))
+        self.W_outputs_batch = np.empty((self.output_neurons, self.hidden_neurons[-1] + 1))
 
         self.gradients = []
         # Número de épocas
@@ -53,11 +53,11 @@ class MLP:
         self.mse_list = []
         # matrices de pesos
         # pesos de la entrada a la primer capa oculta
-        self.W_inputs = np.empty((self.hidden_neurons, self.input_neurons + 1))
+        self.W_inputs = np.empty((self.hidden_neurons[0], self.input_neurons + 1))
         # pesos de las capas ocultas menos la última
-        self.W_hiddens = np.empty((self.hidden_layers, self.hidden_neurons, self.hidden_neurons + 1))
+        self.W_hiddens = np.empty((self.hidden_layers, self.hidden_neurons[-1], self.hidden_neurons[0] + 1))
         # pesos de la última capa oculta y la capa final
-        self.W_outputs = np.empty((self.output_neurons, self.hidden_neurons + 1))
+        self.W_outputs = np.empty((self.output_neurons, self.hidden_neurons[-1] + 1))
         self.randomize_weights()
 
     def randomize_weights(self):
@@ -299,7 +299,6 @@ class MLP:
 
             print(f'Epoca: {self.epoch} | Error cuadrático: {mean_sqr_error}')
             if len(self.mse_list) > 0:
-                print("error actual: ", mean_sqr_error - self.best_mse)
                 print("algoritmo: ", algorithm)
                 # input()
                 if mean_sqr_error - self.best_mse > self.qp_min_error and algorithm == "QP + BP":

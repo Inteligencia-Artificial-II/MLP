@@ -77,19 +77,23 @@ class Plotter:
         if (self.outputs_class > 2):
             self.weight_btn["state"] = NORMAL
 
-    def mlp_can_randomize(self):
+    def mlp_can_randomize(self, neurons):
         if self.mlp == None:
             return False
 
         return not (self.mlp.output_neurons != self.outputs_class
                or self.mlp.hidden_layers != int(self.layers.get())-1
-               or self.mlp.hidden_neurons != int(self.neurons.get()))
+               or self.mlp.hidden_neurons != neurons)
 
     def init_weights(self):
-        if not self.mlp_can_randomize():
+        if int(self.layers.get()) == 2:
+            neurons = (int(self.neurons1.get()), int(self.neurons2.get()))
+        else:
+            neurons = (int(self.neurons1.get()), int(self.neurons1.get()))
+        if not self.mlp_can_randomize(neurons):
             self.mlp = MLP(len(self.X[0]),
                            int(self.layers.get()),
-                           int(self.neurons.get()),
+                           neurons,
                            self.outputs_class)
 
         self.mlp.show_weights = self.show_weights
@@ -226,6 +230,12 @@ class Plotter:
             self.plot_point(i, None, self.mlp.encode_guess(res))
         self.fig.canvas.draw()
 
+    def check_layers(self, event):
+        if int(self.layers.get()) == 2:
+            self.neurons2.grid(row=0, column=1, sticky="w")
+        else:
+            self.neurons2.grid_remove()
+
     def restart(self):
         """devuelve los valores y elementos gráficos a su estado inicial"""
         self.init_weights()
@@ -233,6 +243,7 @@ class Plotter:
             self.table_window.destroy()
         self.checkbox_value.set(False)
         self.clear_plot(self.fig2, 2)
+        self.neurons2.grid_remove()
         plt.figure(1)
         self.clear_plot(self.fig)
         self.is_training = not self.is_training
@@ -244,7 +255,8 @@ class Plotter:
         self.max_epoch.set(self.default_epoch)
         self.min_error.set(self.default_min_error)
         self.layers.set(self.default_layers)
-        self.neurons.set(self.default_neurons)
+        self.neurons1.set(self.default_neurons)
+        self.neurons2.set(self.default_neurons)
         self.algorithms.set(self.default_algorithm)
         self.reset_container.grid_remove()
         self.run_btn['state'] = DISABLED

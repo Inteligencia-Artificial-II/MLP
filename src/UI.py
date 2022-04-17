@@ -73,13 +73,23 @@ def render_main_window(self):
     # arquitectura de la red
     Label(self.center_container, bg="white", text="Número de capas ocultas: ").grid(row=0, column=2, sticky="e")
     self.layers = ttk.Combobox(self.center_container, state="readonly")
+    self.layers.bind('<<ComboboxSelected>>', self.check_layers)
     self.layers["values"] = [1, 2] # solo podemos tener una o dos capas ocultas
     self.layers.set(self.default_layers) # usamos como valor inicial "1"
 
     Label(self.center_container, bg="white", text="Número de neuronas por capa: ").grid(row=1, column=2, sticky="e")
-    self.neurons = ttk.Combobox(self.center_container, state="readonly")
-    self.neurons["values"] = list(range(1, 10)) # podemos elegir cualquier número de neuronas
-    self.neurons.set(self.default_neurons) # usamos como valor inicial "1"
+
+    self.neurons_container = Frame(self.center_container, bg="white")
+    self.neurons1 = ttk.Combobox(self.neurons_container, state="readonly")
+    self.neurons1["values"] = list(range(1, 10)) # podemos elegir cualquier número de neuronas
+    self.neurons1.set(self.default_neurons) # usamos como valor inicial "1"
+    
+    self.neurons2 = ttk.Combobox(self.neurons_container, state="readonly")
+    self.neurons2["values"] = list(range(1, 10)) # podemos elegir cualquier número de neuronas
+    self.neurons2.set(self.default_neurons) # usamos como valor inicial "1"
+
+    self.neurons_container.grid(row=1, column=3, sticky="w")
+    self.neurons1.grid(row=0, column=0, sticky="w")
 
     Label(self.center_container, bg="white", text="Algoritmo: ").grid(row=2, column=2, sticky="e")
     self.algorithms = ttk.Combobox(self.center_container, state="readonly")
@@ -101,7 +111,6 @@ def render_main_window(self):
     self.max_epoch.grid(row=1, column=1, sticky="w")
     self.min_error.grid(row=2, column=1, sticky="w")
     self.layers.grid(row=0, column=3, sticky="w")
-    self.neurons.grid(row=1, column=3, sticky="w")
     self.algorithms.grid(row=2, column=3, sticky="w")
     self.weight_btn.grid(row=0, column=0, sticky="we")
     self.run_btn.grid(row=1, column=0, sticky="we")
