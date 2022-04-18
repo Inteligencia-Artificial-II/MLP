@@ -274,9 +274,8 @@ class MLP:
                 # Se ajustan los pesos
                 self.backpropagation(X[i], algorithm)
 
-                if algorithm == "Quickprop" or algorithm == "QP + BP":
+                if algorithm == "Quickprop":
                     self.quickprop()
-                    self.gradients.clear()
                     self.gradients = []
 
             # Se imprimen los pesos de la capa oculta por época
@@ -298,11 +297,7 @@ class MLP:
                 self.best_mse = mean_sqr_error
 
             print(f'Epoca: {self.epoch} | Error cuadrático: {mean_sqr_error}')
-            if len(self.mse_list) > 0:
-                print("algoritmo: ", algorithm)
-                # input()
-                if mean_sqr_error - self.best_mse > self.qp_min_error and algorithm == "QP + BP":
-                    break
+
             self.mse_list.append(mean_sqr_error)
             epoch_sqr_error = 0
             self.epoch += 1

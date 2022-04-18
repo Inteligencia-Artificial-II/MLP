@@ -42,6 +42,8 @@ class Plotter:
         # Línea de puntos para obtener x2 al imprimir pesos
         self.x1_density = 100
         self.x1_line = np.linspace(self.ax_min, self.ax_max, self.x1_density)
+        self.init_epochs = 0
+        self.init_error = 0
 
         # inicializamos la ventana principal
         self.window = Tk()
@@ -76,6 +78,7 @@ class Plotter:
         self.outputs_class = len(np.unique(self.Y))
         if (self.outputs_class > 2):
             self.weight_btn["state"] = NORMAL
+            self.quickprop_btn["state"] = NORMAL
 
     def mlp_can_randomize(self, neurons):
         if self.mlp == None:
@@ -191,34 +194,31 @@ class Plotter:
                     self.Y,
                     int(self.max_epoch.get()),
                     float(self.min_error.get()), "Batch")
-        elif self.algorithms.get() == "Quickprop":
-            iter, err = self.mlp.train(self.X,
-                    self.Y,
-                    int(self.max_epoch.get()),
-                    float(self.min_error.get()), "Quickprop")
         else:
             iter, err = self.mlp.train(self.X,
                     self.Y,
                     int(self.max_epoch.get()),
-                    float(self.min_error.get()), "QP + BP")
-            iter, err = self.mlp.train(self.X,
-                self.Y,
-                int(self.max_epoch.get()),
-                float(self.min_error.get()), "Stochastic")
+                    float(self.min_error.get()), "Quickprop")
 
         self.mlp.epoch = 0
         self.mlp.mse_list = []
 
         err = round(err, 4)
+        iter = iter - self.init_epochs
+        if self.init_epochs != 0:
+            init_err = round(self.init_error, 4)
+            self.init_conv_text['text'] = f'Error de inicialización: {init_err}, en {self.init_epochs} epocas'
+
         if iter == int(self.max_epoch.get()):
             self.converged_text['text'] = f'Número máximo de epocas alcazada, con un error de {err}'
         else:
             self.converged_text['text'] = f'El set de datos convergió en {iter} epocas, con un error de {err}'
-        self.converged_text.grid(row=5, column=0, columnspan=8, sticky="we")
+        self.init_conv_text.grid(row=5, column=0, columnspan=8, sticky="we")
+        self.converged_text.grid(row=6, column=0, columnspan=8, sticky="we")
         # establecemos el modo de evaluación
         self.is_training = not self.is_training
         self.params_container.grid_remove()
-        self.reset_container.grid(row=6, column=0, columnspan=8)
+        self.reset_container.grid(row=7, column=0, columnspan=8)
 
     def evaluate(self):
         """Obtiene la predicción de las clases correctas de los datos de prueba"""
@@ -235,6 +235,29 @@ class Plotter:
             self.neurons2.grid(row=0, column=1, sticky="w")
         else:
             self.neurons2.grid_remove()
+
+    def QP_initializer(self):
+        self.weight_btn.grid_remove()
+        self.run_btn["state"] = NORMAL
+        if self.mlp == None:
+            self.init_weights()
+
+        # entrenamos la red con los datos ingresados
+        self.mlp.lr = float(self.learning_rate.get())
+        self.mlp.error_figure = self.fig2
+        self.mlp.plot_mse = self.plot_mse
+        self.mlp.plot_weights = self.plot_weights
+        iter, err = self.mlp.train(self.X,
+                self.Y,
+                int(self.max_epoch.get()),
+                float(self.min_error.get()), "Quickprop")
+
+        err = round(err, 4)
+        self.init_epochs = iter
+        self.init_error = err
+        self.init_err_label['text'] = f'Error: {err}'
+        self.init_epoch_label['text'] = f'Epoca: {iter}'
+        
 
     def restart(self):
         """devuelve los valores y elementos gráficos a su estado inicial"""
@@ -261,6 +284,14 @@ class Plotter:
         self.reset_container.grid_remove()
         self.run_btn['state'] = DISABLED
         self.weight_btn['state'] = DISABLED
+        self.quickprop_btn["state"] = DISABLED
         self.converged_text['text'] = ''
+        self.init_err_label['text'] = ''
+        self.init_epoch_label['text'] = ''
         self.converged_text.grid_remove()
+        self.init_conv_text['text'] = ''
+        self.init_conv_text.grid_remove()
+        self.init_epochs = 0
+        self.init_error = 0
+        self.weight_btn.grid(row=0, column=0, sticky="we")
         self.params_container.grid(row=5, column=0, columnspan=8, sticky="we")

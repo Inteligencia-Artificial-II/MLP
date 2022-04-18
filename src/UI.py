@@ -93,12 +93,15 @@ def render_main_window(self):
 
     Label(self.center_container, bg="white", text="Algoritmo: ").grid(row=2, column=2, sticky="e")
     self.algorithms = ttk.Combobox(self.center_container, state="readonly")
-    self.algorithms["values"] = ["Gradiente estocastico", "Lotes", "Quickprop", "QP + BP"]
+    self.algorithms["values"] = ["Gradiente estocastico", "Lotes", "Quickprop"]
     self.algorithms.set(self.default_algorithm)
 
 
     self.right_container = Frame(self.params_container, bg="white", padx=40, pady=20)
     self.weight_btn = Button(self.right_container, bg="white",text="Inicializar pesos", command=self.init_weights, state=DISABLED)
+    self.quickprop_btn = Button(self.right_container, bg="white", text="Inicializar con QP", command=self.QP_initializer, state=DISABLED)
+    self.init_err_label = Label(self.right_container, bg="white", text="", font=("Arial", 15))
+    self.init_epoch_label = Label(self.right_container, bg="white", text="", font=("Arial", 15))
     self.run_btn = Button(self.right_container, text="Entrenar", command=self.run, state=DISABLED)
     self.checkbox_value = BooleanVar(self.right_container)
     self.checkbox = ttk.Checkbutton(self.right_container, text="Mostar pesos", variable=self.checkbox_value)
@@ -113,11 +116,15 @@ def render_main_window(self):
     self.layers.grid(row=0, column=3, sticky="w")
     self.algorithms.grid(row=2, column=3, sticky="w")
     self.weight_btn.grid(row=0, column=0, sticky="we")
+    self.quickprop_btn.grid(row=1, column=1, sticky="we")
+    self.init_err_label.grid(row=0, column=2, sticky="we")
+    self.init_epoch_label.grid(row=1, column=2, sticky="we")
     self.run_btn.grid(row=1, column=0, sticky="we")
     self.checkbox.grid(row=2, column=0, sticky="we")
     self.input_class.grid(row=0, column=3, sticky="w")
 
     # contenedor de la interfaz después de entrenar
+    self.init_conv_text = Label(self.window, text="", bg="white", font=("Arial", 14))
     self.converged_text = Label(self.window, text="", bg="white", font=("Arial", 14))
     self.reset_container = Frame(self.window, bg="white", padx=20, pady=15)
     self.evaluate_btn = Button(self.reset_container, text="Evaluar", command=self.evaluate).grid(row=1, column=0, padx=15)
