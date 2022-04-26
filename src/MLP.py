@@ -308,6 +308,8 @@ class MLP:
             # Si se llegó al número máximo de épocas o si el mse es menor al error mínimo deseado
             if self.epoch == max_epoch or mean_sqr_error < min_error:
                 break
+            elif algorithm == "Quickprop" and mean_sqr_error > self.best_mse + 0.05:
+                break
 
         self.get_confusion_matrix(X, y, D)
         self.sigmoids = [0 for _ in range(2 + self.hidden_layers)]
